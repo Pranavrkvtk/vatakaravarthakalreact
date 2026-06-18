@@ -1,34 +1,22 @@
 import React from 'react';
-import './NewsGrid.css';
+import { useNavigate } from 'react-router-dom';
 
 const NewsGrid = ({ newsItems }) => {
+  const navigate = useNavigate();
+
+  const handleClick = (id) => {
+    navigate(`/news/${id}`);
+  };
+
   return (
-    <div className="news-grid-container">
-      {newsItems.map((item, index) => (
-        <div key={index} className="news-grid-item">
-          <img 
-            src={item.image} 
-            alt="News" 
-            className="news-grid-image"
-          />
-          <div className="news-grid-body">
-            <div className="news-grid-meta">
-              <span className="news-grid-badge">
-                LATEST
-              </span>
-              <span className="news-grid-time">
-                <span className="clock-icon">🕒</span> {item.time}
-              </span>
-            </div>
-            <h3 className="news-grid-title">
-              {item.title}
-            </h3>
-            <p className="news-grid-category">{item.category}</p>
-          </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {newsItems.map((item) => (
+        <div key={item.id} className="bg-white rounded-xl ... cursor-pointer" onClick={() => handleClick(item.id)}>
+          {/* card content */}
         </div>
       ))}
     </div>
   );
 };
 
-export default NewsGrid;  
+export default NewsGrid;
