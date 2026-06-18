@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Menu, X, Search } from "lucide-react";
 import "./Navbar.css";
-
 function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -22,13 +21,7 @@ function Navbar() {
 
   return (
     <>
-  
-
-      {/* Header */}
-      <header className="main-header">
-        <div className="header-top">
-
-              {/* Top Breaking Bar */}
+      {/* Top Bar */}
       <div className="top-bar">
         <div className="top-bar-inner">
           <div className="ticker">
@@ -48,17 +41,20 @@ function Navbar() {
           </div>
         </div>
       </div>
-    <div
+
+      {/* Header */}
+      <header className="main-header">
+        <div className="header-top">
+<h1
   style={{
-    position: "absolute",
-    left: "50%",
-    transform: "translateX(-50%)",
-    textAlign: "center"
+    color: "black",
+    textAlign: "center",
+    margin: 0,
+    fontSize: "3rem"
   }}
 >
-  <h1>വടകര വാർത്തകൾ</h1>
-</div>
-
+  വടകര വാർത്തകൾ
+</h1>
           <div className="header-actions">
             <button
               className="mobile-toggle"
