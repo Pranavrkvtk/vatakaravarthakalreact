@@ -1,19 +1,13 @@
 import React, { useState } from "react";
 import { Menu, X, Search, User, Bell } from "lucide-react";
-import "./Navbar.css"; // <-- import the CSS file
+import "./Navbar.css";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { label: "Home" },
-    { label: "Politics" },
-    { label: "Kerala" },
-    { label: "India" },
-    { label: "Sports" },
-    { label: "Technology" },
-    { label: "Business" },
-    { label: "Entertainment" },
+    "Home", "Politics", "Kerala", "India",
+    "Sports", "Technology", "Business", "Entertainment"
   ];
 
   return (
@@ -46,24 +40,24 @@ const Navbar = () => {
       {/* ===== MAIN HEADER ===== */}
       <header className="main-header">
         <div className="header-inner">
-          {/* LOGO */}
-          <div className="logo-wrapper">
+          {/* LEFT: Desktop Navigation */}
+          <nav className="desktop-nav">
+            {navItems.map((label) => (
+              <a key={label} href="#" className="nav-link">
+                <span className="nav-pill"></span>
+                <span className="nav-label">{label}</span>
+              </a>
+            ))}
+          </nav>
+
+          {/* CENTER: Logo (always centered) */}
+          <div className="logo-center">
             <h1 className="logo-text">
               <span className="logo-gradient">Vatakara Varthakal</span>
             </h1>
           </div>
 
-          {/* DESKTOP NAV */}
-          <nav className="desktop-nav">
-            {navItems.map((item, index) => (
-              <a key={index} href="#" className="nav-link">
-                <span className="nav-pill"></span>
-                <span className="nav-label">{item.label}</span>
-              </a>
-            ))}
-          </nav>
-
-          {/* RIGHT ACTIONS */}
+          {/* RIGHT: Actions */}
           <div className="header-actions">
             <div className="search-wrapper">
               <Search size={16} />
@@ -92,9 +86,9 @@ const Navbar = () => {
         {/* ===== MOBILE MENU ===== */}
         <div className={`mobile-menu ${mobileMenuOpen ? "open" : ""}`}>
           <div className="mobile-menu-inner">
-            {navItems.map((item, index) => (
-              <a key={index} href="#" className="mobile-nav-link">
-                {item.label}
+            {navItems.map((label) => (
+              <a key={label} href="#" className="mobile-nav-link">
+                {label}
               </a>
             ))}
             <div className="mobile-extra">
