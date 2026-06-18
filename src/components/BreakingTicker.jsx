@@ -11,10 +11,7 @@ const BreakingTicker = () => {
           BREAKING
         </span> */}
         <div className="flex-1 overflow-hidden">
-          <p className="text-sm font-medium animate-marquee whitespace-nowrap">
-            • കേരളത്തിൽ അതിശക്തമായ മഴ തുടരുന്നു • രണ്ട് ജില്ലകളിൽ ഓറഞ്ച് അലേർട്ട് • 
-            തുരുവരിൽ വിദ്യാഭ്യാസികളെ ബന്ധിൽ കയ്യാതിരുന്ന സംഭവം • ഇന്ന് പണക്കുല ഇല്ലാതെ
-          </p>
+      
         </div>
       </div>
       <style jsx>{`
