@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Menu, X, Search, User, Bell } from "lucide-react";
 import "./Navbar.css";
 
-const Navbar = () => {
+function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
@@ -22,7 +22,7 @@ const Navbar = () => {
 
   return (
     <>
-      {/* Top Bar */}
+      {/* Top Breaking Bar */}
       <div className="top-bar">
         <div className="top-bar-inner">
           <div className="ticker">
@@ -45,41 +45,18 @@ const Navbar = () => {
 
       {/* Header */}
       <header className="main-header">
-        <div className="header-inner">
 
-          {/* Logo */}
-          <div className="logo-center">
-            <h1 className="logo-text">
-              വടകര വാർത്തകൾ
-            </h1>
+        {/* Logo Row */}
+        <div className="header-top">
+
+          <div className="logo-section">
+            <h1 className="logo-text">വടകര വാർത്തകൾ</h1>
+      
           </div>
 
-          {/* Desktop Menu */}
-          <nav className="desktop-nav">
-            {navItems.map((item, index) => (
-              <a
-                key={index}
-                href="#"
-                className="nav-link"
-              >
-                {item}
-              </a>
-            ))}
-          </nav>
-
-          {/* Right Actions */}
           <div className="header-actions">
-            <button className="icon-btn">
-              <Search size={20} />
-            </button>
 
-            <button className="icon-btn">
-              <Bell size={20} />
-            </button>
-
-            <button className="icon-btn">
-              <User size={20} />
-            </button>
+       
 
             <button
               className="mobile-toggle"
@@ -87,21 +64,22 @@ const Navbar = () => {
             >
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
+
           </div>
         </div>
+
+        {/* Navigation */}
+        <nav className="desktop-nav">
+          {navItems.map((item, index) => (
+            <a href="#" key={index} className="nav-link">
+              {item}
+            </a>
+          ))}
+        </nav>
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="mobile-menu">
-            {navItems.map((item, index) => (
-              <a
-                key={index}
-                href="#"
-                className="mobile-nav-link"
-              >
-                {item}
-              </a>
-            ))}
 
             <div className="mobile-search">
               <Search size={18} />
@@ -110,11 +88,21 @@ const Navbar = () => {
                 placeholder="വാർത്തകൾ തിരയുക..."
               />
             </div>
+
+            {navItems.map((item, index) => (
+              <a
+                href="#"
+                key={index}
+                className="mobile-nav-link"
+              >
+                {item}
+              </a>
+            ))}
           </div>
         )}
       </header>
     </>
   );
-};
+}
 
 export default Navbar;
