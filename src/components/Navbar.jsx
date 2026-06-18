@@ -6,73 +6,80 @@ const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
-    "Home", "Politics", "Kerala", "India",
-    "Sports", "Technology", "Business", "Entertainment"
+    "പ്രാദേശികം",
+    "മലബാര്‍",
+    "കേരളം",
+    "ദേശീയം",
+    "വിദേശം",
+    "ചരമം",
+    "കല",
+    "സാംസ്‌കാരികം",
+    "വിദ്യാഭ്യാസം",
+    "വിനോദം",
+    "യാത്ര",
+    "സാമ്പത്തികം"
   ];
 
   return (
     <>
-      {/* ===== TOP BAR ===== */}
+      {/* Top Bar */}
       <div className="top-bar">
         <div className="top-bar-inner">
           <div className="ticker">
-            <span className="live-badge">
-              <span className="pulse-dot"></span>
-              Live
+            <span className="live-badge">LIVE</span>
+            <span className="breaking-text">
+              വടകര വാർത്തകൾ - ഏറ്റവും പുതിയ വാർത്തകൾ ഉടൻ ലഭ്യമാകും
             </span>
-            <div className="breaking-news">
-              <span className="breaking-label">Breaking:</span>
-              <span className="breaking-text">
-                India wins series final by 6 wickets • Kerala floods: Rescue ops underway
-              </span>
-            </div>
           </div>
+
           <div className="top-bar-right">
-            <span>Thursday, June 18, 2026</span>
-            <div className="status">
-              <span className="status-dot"></span>
-              <span>Stable</span>
-            </div>
+            {new Date().toLocaleDateString("en-IN", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
           </div>
         </div>
       </div>
 
-      {/* ===== MAIN HEADER ===== */}
+      {/* Header */}
       <header className="main-header">
         <div className="header-inner">
-          {/* LEFT: Desktop Navigation */}
+
+          {/* Logo */}
+          <div className="logo-center">
+            <h1 className="logo-text">
+              വടകര വാർത്തകൾ
+            </h1>
+          </div>
+
+          {/* Desktop Menu */}
           <nav className="desktop-nav">
-            {navItems.map((label) => (
-              <a key={label} href="#" className="nav-link">
-                <span className="nav-pill"></span>
-                <span className="nav-label">{label}</span>
+            {navItems.map((item, index) => (
+              <a
+                key={index}
+                href="#"
+                className="nav-link"
+              >
+                {item}
               </a>
             ))}
           </nav>
 
-          {/* CENTER: Logo (always centered) */}
-          <div className="logo-center">
-            <h1 className="logo-text">
-              <span className="logo-gradient">Vatakara Varthakal</span>
-            </h1>
-          </div>
-
-          {/* RIGHT: Actions */}
+          {/* Right Actions */}
           <div className="header-actions">
-            <div className="search-wrapper">
-              <Search size={16} />
-              <input type="text" placeholder="Search news..." />
-            </div>
+            <button className="icon-btn">
+              <Search size={20} />
+            </button>
 
             <button className="icon-btn">
               <Bell size={20} />
-              <span className="notification-dot"></span>
             </button>
+
             <button className="icon-btn">
               <User size={20} />
             </button>
-
-            <a href="#" className="subscribe-btn">Subscribe</a>
 
             <button
               className="mobile-toggle"
@@ -83,25 +90,28 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* ===== MOBILE MENU ===== */}
-        <div className={`mobile-menu ${mobileMenuOpen ? "open" : ""}`}>
-          <div className="mobile-menu-inner">
-            {navItems.map((label) => (
-              <a key={label} href="#" className="mobile-nav-link">
-                {label}
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="mobile-menu">
+            {navItems.map((item, index) => (
+              <a
+                key={index}
+                href="#"
+                className="mobile-nav-link"
+              >
+                {item}
               </a>
             ))}
-            <div className="mobile-extra">
-              <div className="mobile-search">
-                <Search size={16} />
-                <input type="text" placeholder="Search..." />
-              </div>
-              <a href="#" className="mobile-subscribe">
-                Subscribe Now
-              </a>
+
+            <div className="mobile-search">
+              <Search size={18} />
+              <input
+                type="text"
+                placeholder="വാർത്തകൾ തിരയുക..."
+              />
             </div>
           </div>
-        </div>
+        )}
       </header>
     </>
   );

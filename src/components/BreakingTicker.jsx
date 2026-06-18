@@ -7,9 +7,9 @@ const BreakingTicker = () => {
   return (
     <div className="bg-red-600 text-white py-1.5 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 flex items-center">
-        <span className="bg-white text-red-600 text-xs font-bold px-3 py-0.5 rounded mr-3 whitespace-nowrap">
+        {/* <span className="bg-white text-red-600 text-xs font-bold px-3 py-0.5 rounded mr-3 whitespace-nowrap">
           BREAKING
-        </span>
+        </span> */}
         <div className="flex-1 overflow-hidden">
           <p className="text-sm font-medium animate-marquee whitespace-nowrap">
             • കേരളത്തിൽ അതിശക്തമായ മഴ തുടരുന്നു • രണ്ട് ജില്ലകളിൽ ഓറഞ്ച് അലേർട്ട് • 
