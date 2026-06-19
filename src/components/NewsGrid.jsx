@@ -33,8 +33,10 @@ const NewsGrid = ({ newsItems }) => {
               {item.title}
             </h3>
             <p className="mt-2 text-sm text-gray-500 line-clamp-2">
-              {item.summary || (item.content?.substring(0, 120) + '...')}
-            </p>
+{item.summary ||
+  (Array.isArray(item.content)
+    ? item.content.join(' ').substring(0, 100) + '...'
+    : item.content?.substring(0, 100) + '...')}            </p>
             <div className="mt-4 flex items-center justify-between text-xs text-gray-400">
               <div className="flex items-center gap-1">
                 <Clock size={14} />

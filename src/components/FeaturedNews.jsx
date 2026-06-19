@@ -40,8 +40,10 @@ const FeaturedNews = ({ news }) => {
         </h1>
 
         <p className="mt-1 text-sm text-gray-600 line-clamp-3">
-          {news.summary || news.content?.substring(0, 180) + "..."}
-        </p>
+{news.summary ||
+  (Array.isArray(news.content)
+    ? news.content.join(' ').substring(0, 180) + '...'
+    : news.content?.substring(0, 180) + '...')}        </p>
 
         <div className="mt-3 flex items-center text-xs text-gray-400 space-x-2">
           <span>{news.author || "Admin"}</span>
