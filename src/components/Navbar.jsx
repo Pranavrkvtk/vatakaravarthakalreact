@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { Menu, X, Search } from "lucide-react";
+import { Menu, X, Search, Home } from "lucide-react";
+import { Link } from "react-router-dom"; // 👈 import Link
 import "./Navbar.css";
+
 function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -19,9 +21,12 @@ function Navbar() {
     "സാമ്പത്തികം",
   ];
 
+  // Prepend "Home" to nav items
+  const navItemsWithHome = ["പ്രധാനം", ...navItems];
+
   return (
     <>
-      {/* Top Bar */}
+      {/* Top Bar (unchanged) */}
       <div className="top-bar">
         <div className="top-bar-inner">
           <div className="ticker">
@@ -30,7 +35,6 @@ function Navbar() {
               വടകര വാർത്തകൾ - ഏറ്റവും പുതിയ വാർത്തകൾ ഉടൻ ലഭ്യമാകും
             </span>
           </div>
-
           <div className="top-bar-right">
             {new Date().toLocaleDateString("en-IN", {
               weekday: "long",
@@ -45,17 +49,26 @@ function Navbar() {
       {/* Header */}
       <header className="main-header">
         <div className="header-top">
-<h1
-  style={{
-    color: "black",
-    textAlign: "center",
-    margin: 0,
-    fontSize: "3rem"
-  }}
->
-  വടകര വാർത്തകൾ
-</h1>
+          {/* Make the title a link to home as well (optional) */}
+          <Link to="/" style={{ textDecoration: "none" }}>
+            <h1
+              style={{
+                color: "black",
+                textAlign: "center",
+                margin: 0,
+                fontSize: "3rem",
+              }}
+            >
+              വടകര വാർത്തകൾ
+            </h1>
+          </Link>
+
           <div className="header-actions">
+            {/* 👇 Home button with icon */}
+            <Link to="/" className="home-button" aria-label="Home">
+              <Home size={24} />
+            </Link>
+
             <button
               className="mobile-toggle"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -67,10 +80,14 @@ function Navbar() {
 
         {/* Desktop Navigation */}
         <nav className="desktop-nav">
-          {navItems.map((item, index) => (
-            <a href="#" key={index} className="nav-link">
+          {navItemsWithHome.map((item, index) => (
+            <Link
+              to={item === "പ്രധാനം" ? "/" : `#`} // adjust routes as needed
+              key={index}
+              className="nav-link"
+            >
               {item}
-            </a>
+            </Link>
           ))}
         </nav>
 
@@ -79,20 +96,18 @@ function Navbar() {
           <div className="mobile-menu">
             <div className="mobile-search">
               <Search size={18} />
-              <input
-                type="text"
-                placeholder="വാർത്തകൾ തിരയുക..."
-              />
+              <input type="text" placeholder="വാർത്തകൾ തിരയുക..." />
             </div>
 
-            {navItems.map((item, index) => (
-              <a
-                href="#"
+            {navItemsWithHome.map((item, index) => (
+              <Link
+                to={item === "പ്രധാനം" ? "/" : `#`}
                 key={index}
                 className="mobile-nav-link"
+                onClick={() => setMobileMenuOpen(false)} // close menu on click
               >
                 {item}
-              </a>
+              </Link>
             ))}
           </div>
         )}
