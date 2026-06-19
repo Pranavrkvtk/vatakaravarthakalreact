@@ -4,7 +4,8 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import HomePage from './components/pages/HomePage';
 import NewsDetail from './components/NewsDetail';
-import { newsData } from './data/newsData'; // 👈 import from data file
+import CategoryPage from './components/pages/CategoryPage'; // 👈 new
+import { newsData } from './data/newsData';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage newsData={newsData} />} />
           <Route path="/news/:id" element={<NewsDetail newsData={newsData} />} />
+          <Route path="/category/:category" element={<CategoryPage newsData={newsData} />} />
         </Routes>
         <Footer />
       </div>

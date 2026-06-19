@@ -78,39 +78,36 @@ function Navbar() {
           </div>
         </div>
 
-        {/* Desktop Navigation */}
-        <nav className="desktop-nav">
-          {navItemsWithHome.map((item, index) => (
-            <Link
-              to={item === "പ്രധാനം" ? "/" : `#`} // adjust routes as needed
-              key={index}
-              className="nav-link"
-            >
-              {item}
-            </Link>
-          ))}
-        </nav>
 
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="mobile-menu">
-            <div className="mobile-search">
-              <Search size={18} />
-              <input type="text" placeholder="വാർത്തകൾ തിരയുക..." />
-            </div>
+{/* Desktop Navigation */}
+<nav className="desktop-nav">
+  {navItemsWithHome.map((item, index) => (
+    <Link
+      to={item === "പ്രധാനം" ? "/" : `/category/${encodeURIComponent(item)}`}
+      key={index}
+      className="nav-link"
+    >
+      {item}
+    </Link>
+  ))}
+</nav>
 
-            {navItemsWithHome.map((item, index) => (
-              <Link
-                to={item === "പ്രധാനം" ? "/" : `#`}
-                key={index}
-                className="mobile-nav-link"
-                onClick={() => setMobileMenuOpen(false)} // close menu on click
-              >
-                {item}
-              </Link>
-            ))}
-          </div>
-        )}
+{/* Mobile Menu */}
+{mobileMenuOpen && (
+  <div className="mobile-menu">
+    <div className="mobile-search">...</div>
+    {navItemsWithHome.map((item, index) => (
+      <Link
+        to={item === "പ്രധാനം" ? "/" : `/category/${encodeURIComponent(item)}`}
+        key={index}
+        className="mobile-nav-link"
+        onClick={() => setMobileMenuOpen(false)}
+      >
+        {item}
+      </Link>
+    ))}
+  </div>
+)}
       </header>
     </>
   );
