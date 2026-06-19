@@ -665,3 +665,72 @@ body {
 .mt-2 {
   margin-top: 0.5rem;
 }
+
+/* ----- Prevent side scroll in header nav ----- */
+.header-nav {
+  display: flex;
+  flex-wrap: wrap;           /* allow items to wrap to next line */
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem 1rem;          /* row gap and column gap */
+  overflow: visible !important; /* override overflow: auto */
+  padding: 0.25rem 0.5rem;
+}
+
+/* Make nav items smaller on narrow screens */
+@media (max-width: 1024px) {
+  .header-nav a {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-nav {
+    gap: 0.25rem 0.5rem;
+  }
+  .header-nav a {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.4rem;
+  }
+}
+
+/* Make header sticky (already in HomePage.css but ensure it's applied) */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: linear-gradient(135deg, #0f172a 0%, #312e81 50%, #0f172a 100%);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* Ensure top-bar is also sticky if needed, or keep it separate */
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 31; /* above header if needed */
+  background: #1e293b;
+  color: #fff;
+  padding: 0.25rem 1rem;
+}
+
+/* Mobile menu – no side scroll */
+.mobile-menu-panel {
+  position: fixed;
+  top: 64px; /* adjust based on header height */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #0f172a;
+  z-index: 40;
+  overflow-y: auto;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Remove horizontal scroll from body */
+body {
+  overflow-x: hidden;
+}       

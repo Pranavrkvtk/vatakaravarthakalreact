@@ -1,8 +1,7 @@
 import React, { useState } from "react";
-import { Menu, X, Search, Home, Rss } from "lucide-react";   // ← added Rss
+import { Menu, X, Search, Home } from "lucide-react";
 import { Link } from "react-router-dom";
 import "./Navbar.css";
-import "./pages/HomePage";   // ← import premium header styles
 
 function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -22,11 +21,12 @@ function Navbar() {
     "സാമ്പത്തികം",
   ];
 
-  const navItemsWithHome = ["പ്രധാനം", ...navItems];
+  // Prepend "Home" (instead of "പ്രധാനം")
+  const navItemsWithHome = ["Home", ...navItems];
 
   return (
     <>
-      {/* Top Bar – LIVE ticker */}
+      {/* Top Bar */}
       <div className="top-bar">
         <div className="top-bar-inner">
           <div className="ticker">
@@ -46,66 +46,69 @@ function Navbar() {
         </div>
       </div>
 
-      {/* Main Header – premium dark gradient */}
-      <header className="header">
-        <div className="header-inner">
-          <div className="header-left">
-            <div className="header-logo-icon">വ</div>
-            <span className="header-brand">വടകര വാർത്തകൾ</span>
-          </div>
-
-          <nav className="header-nav">
-            {navItemsWithHome.map((item, i) => (
-              <Link
-                key={item}
-                to={item === "പ്രധാനം" ? "/" : `/category/${encodeURIComponent(item)}`}
-                className={i === 0 ? "active" : ""}
-              >
-                {item}
-              </Link>
-            ))}
-          </nav>
+      {/* Header */}
+      <header className="main-header">
+        <div className="header-top">
+          <Link to="/" style={{ textDecoration: "none" }}>
+            <h1
+              style={{
+                color: "black",
+                textAlign: "center",
+                margin: 0,
+                fontSize: "3rem",
+              }}
+            >
+              വടകര വാർത്തകൾ
+            </h1>
+          </Link>
 
           <div className="header-actions">
-            <button aria-label="RSS feed" className="rss-btn">
-              <Rss size={18} />   {/* now Rss is defined */}
-            </button>
-            <div className="header-search">
-              <input type="text" placeholder="Search..." />
-              <button aria-label="Search">
-                <Search size={16} />
-              </button>
-            </div>
+            <Link to="/" className="home-button" aria-label="Home">
+              <Home size={24} />
+            </Link>
+
             <button
-              aria-label="Menu"
-              className="header-menu-btn"
+              className="mobile-toggle"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
         </div>
-      </header>
 
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div className="mobile-menu-panel">
-          <div className="mobile-search">
-            <Search size={18} />
-            <input type="text" placeholder="വാർത്തകൾ തിരയുക..." />
-          </div>
-          {navItemsWithHome.map((item) => (
+        {/* Desktop Navigation */}
+        <nav className="desktop-nav">
+          {navItemsWithHome.map((item, index) => (
             <Link
-              key={item}
-              to={item === "പ്രധാനം" ? "/" : `/category/${encodeURIComponent(item)}`}
-              className="mobile-nav-link"
-              onClick={() => setMobileMenuOpen(false)}
+              key={index}
+              to={item === "Home" ? "/" : `/category/${encodeURIComponent(item)}`}
+              className="nav-link"
             >
               {item}
             </Link>
           ))}
-        </div>
-      )}
+        </nav>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="mobile-menu">
+            <div className="mobile-search">
+              <Search size={18} />
+              <input type="text" placeholder="വാർത്തകൾ തിരയുക..." />
+            </div>
+            {navItemsWithHome.map((item, index) => (
+              <Link
+                key={index}
+                to={item === "Home" ? "/" : `/category/${encodeURIComponent(item)}`}
+                className="mobile-nav-link"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {item}
+              </Link>
+            ))}
+          </div>
+        )}
+      </header>
     </>
   );
 }

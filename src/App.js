@@ -3,8 +3,8 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import HomePage from './components/pages/HomePage';
-import NewsDetail from './components/NewsDetail';
-import CategoryPage from './components/pages/CategoryPage'; // 👈 new
+import NewsView from './components/pages/NewsView';   // renamed from NewsDetail
+import CategoryPage from './components/pages/CategoryPage';
 import { newsData } from './data/newsData';
 
 function App() {
@@ -14,7 +14,7 @@ function App() {
         <Navbar />
         <Routes>
           <Route path="/" element={<HomePage newsData={newsData} />} />
-          <Route path="/news/:id" element={<NewsDetail newsData={newsData} />} />
+          <Route path="/news/:id" element={<NewsView newsData={newsData} />} />
           <Route path="/category/:category" element={<CategoryPage newsData={newsData} />} />
         </Routes>
         <Footer />
