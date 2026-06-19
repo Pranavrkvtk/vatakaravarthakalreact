@@ -10,18 +10,23 @@ const FeaturedNews = ({ news }) => {
     navigate(`/news/${news.id}`);
   };
 
+  const imageSrc = news.image || news.imageUrl || "https://via.placeholder.com/1200x600";
+  const dateString = news.createdAt || news.time;
+  const formattedDate = dateString
+    ? new Date(dateString).toLocaleDateString("en-IN")
+    : "";
+
   return (
     <div
       className="group relative bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 cursor-pointer transition-shadow hover:shadow-md"
       onClick={handleClick}
     >
-      <div className="relative w-full h-64 md:h-80 lg:h-96">
+      <div className="relative w-full h-56 md:h-72"> {/* 👈 medium height */}
         <img
-          src={news.imageUrl || "https://via.placeholder.com/1200x600"}
+          src={imageSrc}
           alt={news.title}
           className="w-full h-full object-cover"
         />
-        {/* Optional overlay for better text readability */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
       </div>
 
@@ -41,11 +46,7 @@ const FeaturedNews = ({ news }) => {
         <div className="mt-3 flex items-center text-xs text-gray-400 space-x-2">
           <span>{news.author || "Admin"}</span>
           <span>•</span>
-          <span>
-            {news.createdAt
-              ? new Date(news.createdAt).toLocaleDateString("en-IN")
-              : ""}
-          </span>
+          <span>{formattedDate}</span>
         </div>
       </div>
     </div>
