@@ -21,81 +21,74 @@ function Navbar() {
     "സാമ്പത്തികം",
   ];
 
-  // Prepend "Home" (instead of "പ്രധാനം")
   const navItemsWithHome = ["Home", ...navItems];
 
   return (
     <>
-      {/* Top Bar */}
-      <div className="top-bar">
-        <div className="top-bar-inner">
-          <div className="ticker">
-            <span className="live-badge">LIVE</span>
-            <span className="breaking-text">
-              വടകര വാർത്തകൾ - ഏറ്റവും പുതിയ വാർത്തകൾ ഉടൻ ലഭ്യമാകും
-            </span>
-          </div>
-          <div className="top-bar-right">
-            {new Date().toLocaleDateString("en-IN", {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Header */}
+      {/* ========== MAIN HEADER (sticky) ========== */}
       <header className="main-header">
-        <div className="header-top">
-          <Link to="/" style={{ textDecoration: "none" }}>
-            <h1
-              style={{
-                color: "black",
-                textAlign: "center",
-                margin: 0,
-                fontSize: "3rem",
-              }}
-            >
-              വടകര വാർത്തകൾ
-            </h1>
-          </Link>
-
-          <div className="header-actions">
-            <Link to="/" className="home-button" aria-label="Home">
-              <Home size={24} />
-            </Link>
-
-            <button
-              className="mobile-toggle"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
+        {/* TOP BAR – LIVE ticker + date */}
+        <div className="top-bar">
+          <div className="top-bar-inner">
+            <div className="ticker">
+              <span className="live-badge">LIVE</span>
+              <span className="breaking-text">
+                വടകര വാർത്തകൾ - ഏറ്റവും പുതിയ വാർത്തകൾ ഉടൻ ലഭ്യമാകും
+              </span>
+            </div>
+            <div className="top-bar-right">
+              {new Date().toLocaleDateString("en-IN", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </div>
           </div>
         </div>
 
-        {/* Desktop Navigation */}
-        <nav className="desktop-nav">
-          {navItemsWithHome.map((item, index) => (
-            <Link
-              key={index}
-              to={item === "Home" ? "/" : `/category/${encodeURIComponent(item)}`}
-              className="nav-link"
-            >
-              {item}
+        {/* MAIN NAV – brand + links + menu button */}
+        <div className="nav-main">
+          <div className="nav-container">
+            {/* Brand / Logo */}
+            <Link to="/" className="brand-link">
+              <span className="brand-name">വടകര വാർത്തകൾ</span>
             </Link>
-          ))}
-        </nav>
 
-        {/* Mobile Menu */}
+            {/* Desktop Navigation – hidden on mobile, shown on larger screens */}
+            <nav className="desktop-nav">
+              {navItemsWithHome.map((item, index) => (
+                <Link
+                  key={index}
+                  to={item === "Home" ? "/" : `/category/${encodeURIComponent(item)}`}
+                  className="nav-link"
+                >
+                  {item}
+                </Link>
+              ))}
+            </nav>
+
+            {/* Right side: search + menu toggle (for mobile) */}
+            <div className="nav-actions">
+              <div className="search-wrapper">
+                <Search size={18} className="search-icon" />
+                <input type="text" placeholder="തിരയുക..." className="search-input" />
+              </div>
+              <button
+                className="mobile-toggle"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                aria-label="Toggle menu"
+              >
+                {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Menu (slides down) */}
         {mobileMenuOpen && (
           <div className="mobile-menu">
-            <div className="mobile-search">
-              <Search size={18} />
-              <input type="text" placeholder="വാർത്തകൾ തിരയുക..." />
-            </div>
+         
             {navItemsWithHome.map((item, index) => (
               <Link
                 key={index}
