@@ -1,3 +1,4 @@
+// App.js (stays exactly as you have it)
 import React from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
@@ -11,7 +12,6 @@ import AdminDashboard from './components/pages/AdminDashboard';
 import Login from './components/pages/Login';
 import SearchPage from './components/pages/SearchPage';
 
-// Wrapper component to handle conditional Navbar/Footer
 function Layout() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
