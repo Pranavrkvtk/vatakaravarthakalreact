@@ -3,7 +3,10 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import MediaTab from "./MediaTab";
-import NewsModal from "./NewsModal"
+import NewsModal from "./NewsModal";
+import NewsTab from "./NewsTab";
+import AdsTab from "./AdsTab";
+
 // ---------- Loading Spinner ----------
 const LoadingSpinner = () => (
   <div style={{ textAlign: "center", padding: "40px" }}>
@@ -110,7 +113,7 @@ const DashboardTab = ({ stats }) => {
   );
 };
 
-// ---------- Lightweight Rich Text Editor (no extra dependencies) ----------
+// ---------- RichTextEditor (shared) ----------
 const rteBtnStyle = {
   background: "#fff", border: "1px solid var(--border-light)", borderRadius: 6,
   width: 30, height: 30, cursor: "pointer", fontSize: 13, fontWeight: 700,
@@ -124,7 +127,6 @@ function RichTextEditor({ value, onChange }) {
     if (editorRef.current) {
       editorRef.current.innerHTML = value || "";
     }
-    // Only run on mount of this instance (NewsModal remounts the editor per post)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -186,7 +188,7 @@ function RichTextEditor({ value, onChange }) {
   );
 }
 
-// ---------- Status badge ----------
+// ---------- Status badge (for posts) ----------
 const STATUS_STYLES = {
   published: { bg: "#dcfce7", color: "#16a34a" },
   draft: { bg: "#fef3c7", color: "#d97706" },
@@ -215,367 +217,7 @@ const linkBtnStyle = {
 
 const qeLabelStyle = { display: "block", fontSize: 11, fontWeight: 700, color: "var(--text-secondary)", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.3 };
 
-// ---------- Enhanced News Tab with WordPress-like UI ----------
-const NewsTab = ({
-  news,
-  loading,
-  onEdit,
-  onAdd,
-  onView,
-  onTrash,
-  onRestore,
-  onDeleteForever,
-  onQuickSave,
-  filters,
-  setFilters,
-  bulkAction,
-  setBulkAction,
-  onApplyBulkAction,
-  searchTerm,
-  setSearchTerm,
-  currentPage,
-  setCurrentPage,
-  categories,
-  itemsPerPage = 10,
-}) => {
-  const [selectedItems, setSelectedItems] = useState([]);
-  const [quickEditId, setQuickEditId] = useState(null);
-  const [quickEditForm, setQuickEditForm] = useState({});
-
-  // Calculate statistics
-  const stats = {
-    all: news.length,
-    published: news.filter(n => n.status === 'published').length,
-    scheduled: news.filter(n => n.status === 'scheduled').length,
-    drafts: news.filter(n => n.status === 'draft' || n.status === 'pending').length,
-    trash: news.filter(n => n.status === 'trash').length,
-  };
-
-  // Filter news based on status, category, and search
-  const filteredNews = news.filter(item => {
-    if (filters.status === 'published' && item.status !== 'published') return false;
-    if (filters.status === 'scheduled' && item.status !== 'scheduled') return false;
-    if (filters.status === 'drafts' && item.status !== 'draft' && item.status !== 'pending') return false;
-    if (filters.status === 'trash' && item.status !== 'trash') return false;
-    if (filters.status === 'all' && item.status === 'trash') return false; // trash hidden unless explicitly viewing it
-
-    if (filters.category && filters.category !== 'all' && item.category !== filters.category) return false;
-
-    if (searchTerm) {
-      const search = searchTerm.toLowerCase();
-      return item.title.toLowerCase().includes(search) ||
-             (item.author && item.author.toLowerCase().includes(search));
-    }
-    return true;
-  });
-
-  const totalPages = Math.max(1, Math.ceil(filteredNews.length / itemsPerPage));
-  const paginatedNews = filteredNews.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const handleSelectAll = (e) => {
-    setSelectedItems(e.target.checked ? paginatedNews.map(item => item.id) : []);
-  };
-
-  const handleSelectItem = (id) => {
-    setSelectedItems(prev =>
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-    );
-  };
-
-  const startQuickEdit = (item) => {
-    setQuickEditId(item.id);
-    setQuickEditForm({
-      title: item.title || "",
-      category: item.category || "",
-      tags: item.tags || "",
-      status: item.status || "draft",
-    });
-  };
-
-  const saveQuickEdit = () => {
-    onQuickSave(quickEditId, quickEditForm);
-    setQuickEditId(null);
-  };
-
-  if (loading) return <LoadingSpinner />;
-
-  return (
-    <div style={{ background: "var(--surface)", borderRadius: 16, padding: 24 }}>
-      <style>{`
-        .wpd-row-actions { opacity: 0; transition: opacity 0.12s; font-size: 12.5px; margin-top: 5px; color: var(--text-secondary); }
-        .wpd-row:hover .wpd-row-actions { opacity: 1; }
-        .wpd-row-actions button:hover { text-decoration: underline; }
-        .wpd-sep { margin: 0 6px; color: var(--border-light); }
-        .wpd-thumb { width: 56px; height: 40px; border-radius: 8px; object-fit: cover; display: block; }
-        .wpd-thumb-placeholder { width: 56px; height: 40px; border-radius: 8px; background: var(--bg-base); display:flex; align-items:center; justify-content:center; font-size:18px; color: var(--text-secondary); }
-      `}</style>
-
-      {/* Header with Add button */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <h3 style={{ margin: 0, fontSize: 22 }}>Posts</h3>
-        <button
-          onClick={onAdd}
-          style={{
-            background: "var(--primary)", color: "#fff", border: "none",
-            padding: "12px 28px", borderRadius: 10, fontSize: 16, fontWeight: 700,
-            cursor: "pointer", boxShadow: "0 2px 8px rgba(79,70,229,0.3)",
-          }}
-        >
-          + Add New
-        </button>
-      </div>
-
-      {/* Statistics Bar */}
-      <div style={{
-        display: "flex", gap: 24, marginBottom: 20, flexWrap: "wrap",
-        padding: "12px 0", borderBottom: "1px solid var(--border-light)",
-      }}>
-        {[
-          ["all", "All", stats.all],
-          ["published", "Published", stats.published],
-          ["scheduled", "Scheduled", stats.scheduled],
-          ["drafts", "Drafts", stats.drafts],
-          ["trash", "Trash", stats.trash],
-        ].map(([key, label, count]) => (
-          <span
-            key={key}
-            onClick={() => { setFilters({ ...filters, status: key }); setCurrentPage(1); }}
-            style={{
-              cursor: "pointer",
-              fontWeight: filters.status === key ? 700 : 500,
-              color: filters.status === key ? "var(--primary)" : "var(--text-primary)",
-            }}
-          >
-            {label} <span style={{ color: "var(--text-secondary)", fontWeight: 400 }}>({count})</span>
-          </span>
-        ))}
-      </div>
-
-      {/* Filter Bar */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
-        <select
-          value={bulkAction}
-          onChange={(e) => setBulkAction(e.target.value)}
-          style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid var(--border-light)", background: "#fff", color: "var(--text-primary)", fontSize: 14 }}
-        >
-          <option value="">Bulk Actions</option>
-          <option value="publish">Publish</option>
-          <option value="draft">Move to Draft</option>
-          <option value="trash">Move to Trash</option>
-          {filters.status === 'trash' && <option value="restore">Restore</option>}
-          {filters.status === 'trash' && <option value="delete">Delete Permanently</option>}
-        </select>
-
-        <button
-          onClick={() => {
-            if (selectedItems.length === 0) {
-              Swal.fire("Warning", "No items selected", "warning");
-              return;
-            }
-            if (!bulkAction) {
-              Swal.fire("Warning", "Choose a bulk action first", "warning");
-              return;
-            }
-            onApplyBulkAction(bulkAction, selectedItems);
-            setSelectedItems([]);
-          }}
-          style={{ padding: "8px 20px", borderRadius: 8, border: "1px solid var(--border-light)", background: "#fff", cursor: "pointer", fontSize: 14 }}
-        >
-          Apply
-        </button>
-
-        <select
-          value={filters.date}
-          onChange={(e) => setFilters({ ...filters, date: e.target.value })}
-          style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid var(--border-light)", background: "#fff", color: "var(--text-primary)", fontSize: 14 }}
-        >
-          <option value="all">All Dates</option>
-          <option value="today">Today</option>
-          <option value="yesterday">Yesterday</option>
-          <option value="week">This Week</option>
-          <option value="month">This Month</option>
-        </select>
-
-        <select
-          value={filters.category}
-          onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-          style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid var(--border-light)", background: "#fff", color: "var(--text-primary)", fontSize: 14 }}
-        >
-          <option value="all">All Categories</option>
-          {categories.map(c => (
-            <option key={c.name} value={c.name}>{c.name} ({c.count})</option>
-          ))}
-        </select>
-
-        <input
-          type="text"
-          placeholder="Type here to search..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ flex: 1, minWidth: 200, padding: "8px 16px", borderRadius: 8, border: "1px solid var(--border-light)", background: "#fff", color: "var(--text-primary)", fontSize: 14 }}
-        />
-      </div>
-
-      {/* News Table */}
-      {filteredNews.length === 0 ? (
-        <p style={{ color: "var(--text-secondary)", fontSize: 18, textAlign: "center", padding: "40px 0" }}>
-          No news found.
-        </p>
-      ) : (
-        <>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
-              <thead>
-                <tr style={{ background: "var(--bg-base)", textAlign: "left", borderBottom: "2px solid var(--border-light)" }}>
-                  <th style={{ padding: "12px 16px", width: 40 }}>
-                    <input type="checkbox" onChange={handleSelectAll}
-                      checked={selectedItems.length === paginatedNews.length && paginatedNews.length > 0} />
-                  </th>
-                  <th style={{ padding: "12px 16px", fontWeight: 600, color: "var(--text-secondary)" }}>Image</th>
-                  <th style={{ padding: "12px 16px", fontWeight: 600, color: "var(--text-secondary)" }}>Title</th>
-                  <th style={{ padding: "12px 16px", fontWeight: 600, color: "var(--text-secondary)" }}>Author</th>
-                  <th style={{ padding: "12px 16px", fontWeight: 600, color: "var(--text-secondary)" }}>Category</th>
-                  <th style={{ padding: "12px 16px", fontWeight: 600, color: "var(--text-secondary)" }}>Tags</th>
-                  <th style={{ padding: "12px 16px", fontWeight: 600, color: "var(--text-secondary)" }}>Status</th>
-                  <th style={{ padding: "12px 16px", fontWeight: 600, color: "var(--text-secondary)" }}>Date</th>
-                  <th style={{ padding: "12px 16px", fontWeight: 600, color: "var(--text-secondary)" }}>Views</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedNews.map((item) => {
-                  if (quickEditId === item.id) {
-                    return (
-                      <tr key={`qe-${item.id}`} style={{ background: "var(--primary-soft)" }}>
-                        <td colSpan={9} style={{ padding: 18 }}>
-                          <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-end" }}>
-                            <div style={{ flex: "2 1 220px" }}>
-                              <label style={qeLabelStyle}>Title</label>
-                              <input value={quickEditForm.title}
-                                onChange={(e) => setQuickEditForm({ ...quickEditForm, title: e.target.value })} />
-                            </div>
-                            <div style={{ flex: "1 1 150px" }}>
-                              <label style={qeLabelStyle}>Category</label>
-                              <select value={quickEditForm.category}
-                                onChange={(e) => setQuickEditForm({ ...quickEditForm, category: e.target.value })}>
-                                <option value="">— None —</option>
-                                {categories.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
-                              </select>
-                            </div>
-                            <div style={{ flex: "1 1 150px" }}>
-                              <label style={qeLabelStyle}>Tags</label>
-                              <input value={quickEditForm.tags}
-                                onChange={(e) => setQuickEditForm({ ...quickEditForm, tags: e.target.value })} />
-                            </div>
-                            <div style={{ flex: "1 1 140px" }}>
-                              <label style={qeLabelStyle}>Status</label>
-                              <select value={quickEditForm.status}
-                                onChange={(e) => setQuickEditForm({ ...quickEditForm, status: e.target.value })}>
-                                <option value="draft">Draft</option>
-                                <option value="pending">Pending Review</option>
-                                <option value="published">Published</option>
-                                <option value="scheduled">Scheduled</option>
-                              </select>
-                            </div>
-                            <div style={{ display: "flex", gap: 8 }}>
-                              <button onClick={saveQuickEdit} style={{
-                                background: "var(--primary)", color: "#fff", border: "none",
-                                padding: "10px 20px", borderRadius: 8, fontWeight: 700, cursor: "pointer",
-                              }}>Update</button>
-                              <button onClick={() => setQuickEditId(null)} style={{
-                                background: "#fff", border: "1px solid var(--border-light)",
-                                padding: "10px 20px", borderRadius: 8, fontWeight: 600, cursor: "pointer",
-                              }}>Cancel</button>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  }
-
-                  return (
-                    <tr key={item.id} className="wpd-row" style={{
-                      borderBottom: "1px solid var(--border-light)",
-                      background: selectedItems.includes(item.id) ? "var(--primary-soft)" : "transparent",
-                    }}>
-                      <td style={{ padding: "12px 16px" }}>
-                        <input type="checkbox" checked={selectedItems.includes(item.id)}
-                          onChange={() => handleSelectItem(item.id)} />
-                      </td>
-                      <td style={{ padding: "12px 16px" }}>
-                        {item.image
-                          ? <img src={item.image} alt="" className="wpd-thumb" />
-                          : <div className="wpd-thumb-placeholder">🖼️</div>}
-                      </td>
-                      <td style={{ padding: "12px 16px", fontWeight: 500 }}>
-                        <div>{item.title}</div>
-                        {item.status === 'trash' ? (
-                          <span className="wpd-row-actions">
-                            <button style={linkBtnStyle} onClick={() => onRestore(item.id)}>Restore</button>
-                            <span className="wpd-sep">|</span>
-                            <button style={{ ...linkBtnStyle, color: "var(--error)" }} onClick={() => onDeleteForever(item.id)}>Delete Permanently</button>
-                          </span>
-                        ) : (
-                          <span className="wpd-row-actions">
-                            <button style={{ ...linkBtnStyle, color: "var(--primary)" }} onClick={() => onEdit(item)}>Edit</button>
-                            <span className="wpd-sep">|</span>
-                            <button style={linkBtnStyle} onClick={() => startQuickEdit(item)}>Quick Edit</button>
-                            <span className="wpd-sep">|</span>
-                            <button style={{ ...linkBtnStyle, color: "var(--error)" }} onClick={() => onTrash(item.id)}>Trash</button>
-                            <span className="wpd-sep">|</span>
-                            <button style={linkBtnStyle} onClick={() => onView(item)}>View</button>
-                          </span>
-                        )}
-                      </td>
-                      <td style={{ padding: "12px 16px" }}>{item.author || "newsdesk"}</td>
-                      <td style={{ padding: "12px 16px" }}>
-                        <span style={{ background: "#eef2ff", color: "#4f46e5", padding: "2px 8px", borderRadius: 4, fontSize: 12 }}>
-                          {item.category || "Uncategorized"}
-                        </span>
-                      </td>
-                      <td style={{ padding: "12px 16px", color: "var(--text-secondary)" }}>{item.tags || "—"}</td>
-                      <td style={{ padding: "12px 16px" }}><StatusBadge status={item.status} /></td>
-                      <td style={{ padding: "12px 16px", color: "var(--text-secondary)", fontSize: 13 }}>
-                        {item.status === 'scheduled' && item.scheduledDate
-                          ? <span style={{ color: "#2563eb", fontWeight: 600 }}>Scheduled: {new Date(item.scheduledDate).toLocaleString()}</span>
-                          : (item.publishedDate || item.createdAt || "2026/06/20")}
-                      </td>
-                      <td style={{ padding: "12px 16px", fontWeight: 600 }}>{item.views || 0}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 16, borderTop: "1px solid var(--border-light)", marginTop: 16 }}>
-              <span style={{ color: "var(--text-secondary)", fontSize: 14 }}>
-                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredNews.length)} of {filteredNews.length} items
-              </span>
-              <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}
-                  style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid var(--border-light)", background: currentPage === 1 ? "#f3f4f6" : "#fff", color: currentPage === 1 ? "var(--text-secondary)" : "var(--text-primary)", cursor: currentPage === 1 ? "not-allowed" : "pointer" }}>
-                  ← Prev
-                </button>
-                <span style={{ padding: "6px 14px", borderRadius: 6, background: "var(--primary)", color: "#fff" }}>{currentPage}</span>
-                <button onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}
-                  style={{ padding: "6px 14px", borderRadius: 6, border: "1px solid var(--border-light)", background: currentPage === totalPages ? "#f3f4f6" : "#fff", color: currentPage === totalPages ? "var(--text-secondary)" : "var(--text-primary)", cursor: currentPage === totalPages ? "not-allowed" : "pointer" }}>
-                  Next →
-                </button>
-              </div>
-            </div>
-          )}
-        </>
-      )}
-    </div>
-  );
-};
-
-// ---------- Categories Tab (full CRUD) ----------
+// ---------- Categories Tab ----------
 function CategoriesTab({ categories, onAdd, onRename, onDelete }) {
   const [newCat, setNewCat] = useState("");
   const [editingCat, setEditingCat] = useState(null);
@@ -665,17 +307,7 @@ function CategoriesTab({ categories, onAdd, onRename, onDelete }) {
   );
 }
 
-// ---------- News Modal ----------
-const tabBtnStyle = (active) => ({
-  background: active ? "var(--primary)" : "#fff",
-  color: active ? "#fff" : "var(--text-secondary)",
-  border: "1px solid var(--border-light)",
-  padding: "6px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer",
-});
-
-
-
-// ---------- Preview ("View") Modal ----------
+// ---------- Preview Modal ----------
 function PreviewModal({ item, onClose }) {
   if (!item) return null;
   return (
@@ -720,9 +352,15 @@ export default function AdminDashboard() {
   const [error, setError] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString());
 
+  // ---- News state ----
   const [news, setNews] = useState([]);
   const [stats, setStats] = useState({ total: 0, published: 0, scheduled: 0, drafts: 0, trash: 0 });
 
+  // ---- Ads state ----
+  const [ads, setAds] = useState([]);
+  const [adsLoading, setAdsLoading] = useState(false);
+
+  // ---- Modals ----
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingNews, setEditingNews] = useState(null);
@@ -735,7 +373,7 @@ export default function AdminDashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [bulkAction, setBulkAction] = useState('');
 
-  // Resize
+  // ---------- Resize ----------
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -746,7 +384,7 @@ export default function AdminDashboard() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Clock
+  // ---------- Clock ----------
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }));
@@ -754,7 +392,7 @@ export default function AdminDashboard() {
     return () => clearInterval(timer);
   }, []);
 
-  // Auto-publish scheduled posts once their time arrives (frontend simulation of WP-Cron)
+  // ---------- Auto-publish scheduled posts ----------
   useEffect(() => {
     const timer = setInterval(() => {
       setNews((prev) => prev.map((n) => (
@@ -766,7 +404,7 @@ export default function AdminDashboard() {
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch news
+  // ---------- Fetch news ----------
   const fetchNews = async () => {
     setLoading(true);
     try {
@@ -783,7 +421,7 @@ export default function AdminDashboard() {
 
   useEffect(() => { fetchNews(); }, []);
 
-  // Recompute stats whenever news changes
+  // ---------- Recompute stats ----------
   useEffect(() => {
     setStats({
       total: news.length,
@@ -794,7 +432,7 @@ export default function AdminDashboard() {
     });
   }, [news]);
 
-  // Categories derived from posts + manually added empty ones
+  // ---------- Categories ----------
   const allCategories = useMemo(() => {
     const counts = {};
     news.forEach((n) => {
@@ -807,7 +445,7 @@ export default function AdminDashboard() {
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [news, customCategories]);
 
-  // Generic item updater: tries the API, always reflects the change locally (frontend-only friendly)
+  // ---------- Generic item updater for news ----------
   const updateNewsItem = async (id, changes) => {
     const current = news.find((n) => n.id === id);
     const updated = { ...current, ...changes };
@@ -816,12 +454,11 @@ export default function AdminDashboard() {
       const token = localStorage.getItem("token");
       await axios.put(`http://localhost:8080/api/news/${id}`, updated, { headers: { Authorization: `Bearer ${token}` } });
     } catch (err) {
-      // No backend endpoint yet for this change — local state already reflects it.
       console.warn("Backend sync skipped:", err?.message);
     }
   };
 
-  // CRUD operations
+  // ---------- News CRUD ----------
   const handleAddNews = () => setIsAddModalOpen(true);
   const handleEditNews = (item) => { setEditingNews(item); setIsEditModalOpen(true); };
   const handleViewNews = (item) => setPreviewItem(item);
@@ -860,7 +497,7 @@ export default function AdminDashboard() {
     Swal.fire("Deleted", "", "success");
   };
 
-  // Bulk action handler
+  // ---------- Bulk action ----------
   const handleBulkAction = async (action, selectedIds) => {
     if (!action || selectedIds.length === 0) return;
     const labels = { publish: "publish", draft: "move to draft", trash: "move to trash", restore: "restore", delete: "permanently delete" };
@@ -887,7 +524,7 @@ export default function AdminDashboard() {
     Swal.fire("Done", "", "success");
   };
 
-  // Category CRUD
+  // ---------- Category CRUD ----------
   const handleAddCategory = (name) => {
     const trimmed = name.trim();
     if (!trimmed) return;
@@ -929,19 +566,57 @@ export default function AdminDashboard() {
     Swal.fire("Deleted", "", "success");
   };
 
+  // ---------- Ads CRUD (localStorage) ----------
+  const fetchAds = () => {
+    setAdsLoading(true);
+    try {
+      const stored = localStorage.getItem("ads");
+      setAds(stored ? JSON.parse(stored) : []);
+    } catch (e) {
+      setAds([]);
+    } finally {
+      setAdsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAds();
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("ads", JSON.stringify(ads));
+  }, [ads]);
+
+  const handleAddAd = (data) => {
+    const newAd = { ...data, id: Date.now(), createdAt: new Date().toISOString() };
+    setAds([newAd, ...ads]);
+  };
+
+  const handleEditAd = (id, data) => {
+    setAds(ads.map(ad => (ad.id === id ? { ...ad, ...data } : ad)));
+  };
+
+  const handleDeleteAd = (id) => {
+    setAds(ads.filter(ad => ad.id !== id));
+  };
+
+  // ---------- Logout ----------
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     navigate("/login");
   };
 
+  // ---------- Navigation ----------
   const navItems = [
     { icon: "📊", label: "Dashboard", id: "dashboard" },
     { icon: "📰", label: "Posts", id: "news" },
     { icon: "📂", label: "Categories", id: "categories" },
+    { icon: "📢", label: "Ads", id: "ads" },
     { icon: "🎬", label: "Media", id: "media" },
   ];
 
+  // ---------- Render content ----------
   const renderContent = () => {
     if (loading && activeTab !== "dashboard") return <LoadingSpinner />;
     if (error) return <div style={{ color: "var(--error)" }}>⚠️ {error}</div>;
@@ -982,6 +657,23 @@ export default function AdminDashboard() {
             onDelete={handleDeleteCategory}
           />
         );
+      case "ads":
+        return (
+          <AdsTab
+            ads={ads}
+            loading={adsLoading}
+            onAdd={handleAddAd}
+            onEdit={handleEditAd}
+            onDelete={handleDeleteAd}
+            onSave={(data, id) => {
+              if (id) {
+                handleEditAd(id, data);
+              } else {
+                handleAddAd(data);
+              }
+            }}
+          />
+        );
       case "media":
         return <MediaTab />;
       default:
@@ -989,6 +681,7 @@ export default function AdminDashboard() {
     }
   };
 
+  // ---------- Return JSX ----------
   return (
     <>
       <style>{`
@@ -1015,6 +708,7 @@ export default function AdminDashboard() {
       `}</style>
 
       <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg-base)", paddingBottom: isMobile ? 70 : 0 }}>
+        {/* Sidebar */}
         {!isMobile && (
           <nav style={{
             width: sidebarOpen ? 260 : 0, background: "var(--surface)",
@@ -1046,6 +740,7 @@ export default function AdminDashboard() {
           </nav>
         )}
 
+        {/* Mobile Header */}
         {isMobile && (
           <div style={{
             position: "fixed", top: 0, left: 0, right: 0,
@@ -1058,6 +753,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {/* Main */}
         <main style={{ flex: 1, padding: isMobile ? "70px 16px 20px" : "32px 40px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", flexDirection: isMobile ? "column" : "row", gap: 12, marginBottom: 24 }}>
             {!isMobile && (
@@ -1071,11 +767,13 @@ export default function AdminDashboard() {
           {renderContent()}
         </main>
 
+        {/* Mobile Bottom Nav */}
         {isMobile && (
           <MobileBottomNav activeTab={activeTab} onTabChange={setActiveTab} onLogout={handleLogout} items={navItems} />
         )}
       </div>
 
+      {/* News Modal */}
       <NewsModal
         isOpen={isAddModalOpen || isEditModalOpen}
         onClose={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); setEditingNews(null); }}
@@ -1092,7 +790,7 @@ export default function AdminDashboard() {
             }
             await fetchNews();
           } catch (err) {
-            // Frontend-only fallback so the UI still works without a matching backend
+            // Frontend-only fallback
             setNews((prev) => editingNews
               ? prev.map((n) => (n.id === editingNews.id ? { ...n, ...data } : n))
               : [...prev, { ...data, id: Date.now(), views: 0, createdAt: new Date().toLocaleDateString() }]);
@@ -1101,6 +799,7 @@ export default function AdminDashboard() {
         }}
       />
 
+      {/* Preview Modal */}
       <PreviewModal item={previewItem} onClose={() => setPreviewItem(null)} />
     </>
   );
