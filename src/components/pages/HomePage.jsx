@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { getAllNews } from '../../services/newsService';
 import { Rss, Search, ChevronLeft, ChevronRight, Clock, Zap, Menu, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';  // added for proper linking
+import { Link } from 'react-router-dom';
 import './HomePage.css';
 
 // ----------------------------------------------------------------
@@ -15,7 +16,7 @@ export const CATEGORY_COLORS = {
 };
 
 // ----------------------------------------------------------------
-// Reusable components (now accept data via props)
+// Reusable components (same as before)
 // ----------------------------------------------------------------
 
 const DateLine = ({ date, className = '' }) => (
@@ -24,17 +25,13 @@ const DateLine = ({ date, className = '' }) => (
   </span>
 );
 
-// Sidebar – uses `newsData` to populate "Latest" and "Trending"
 const Sidebar = ({ newsData }) => {
   const [tab, setTab] = useState('latest');
 
-  // Helper to get items for a tab (fallback to all if not enough)
   const getItems = (type) => {
     if (type === 'latest') {
-      // Show first 5 as "latest" (you can sort by date if you have a date field)
       return newsData.slice(0, 5);
     } else {
-      // Show next 5 as "trending" (or any other logic)
       return newsData.slice(5, 10);
     }
   };
@@ -84,7 +81,6 @@ const Sidebar = ({ newsData }) => {
         ))}
       </ul>
 
-      {/* Sidebar Ad */}
       <div className="sidebar-ad">
         <p className="ad-label">— ADVERTISEMENT —</p>
         <div className="ad-content"><div className="ad-placeholder">300×250</div></div>
@@ -93,7 +89,6 @@ const Sidebar = ({ newsData }) => {
   );
 };
 
-// Ad banners (unchanged)
 const AdBanner = () => (
   <div className="ad-banner">
     <div className="ad-text">
@@ -120,7 +115,6 @@ const FooterAd = () => (
   </div>
 );
 
-// Breaking Ticker – uses first 5 items (or all)
 const BreakingTicker = ({ newsData }) => {
   const [index, setIndex] = useState(0);
   const items = newsData.slice(0, 5);
@@ -141,7 +135,6 @@ const BreakingTicker = ({ newsData }) => {
   );
 };
 
-// Featured News (big card) – uses the first item in the array
 const FeaturedNews = ({ news }) => {
   if (!news) return null;
   return (
@@ -163,7 +156,6 @@ const FeaturedNews = ({ news }) => {
   );
 };
 
-// Grid card (small)
 const NewsCard = ({ news }) => (
   <div className="news-card">
     <div className="img-wrap">
@@ -187,7 +179,6 @@ const NewsCard = ({ news }) => (
   </div>
 );
 
-// News Grid – uses the entire newsData; featured is the first item, rest in grid
 const NewsGrid = ({ newsData }) => {
   if (!newsData || newsData.length === 0) return null;
   const featured = newsData[0];
@@ -203,9 +194,36 @@ const NewsGrid = ({ newsData }) => {
 };
 
 // ----------------------------------------------------------------
-// HomePage – receives newsData as a prop
+// HomePage – now fetches data internally
 // ----------------------------------------------------------------
-const HomePage = ({ newsData }) => {
+const HomePage = () => {
+  const [newsData, setNewsData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    getAllNews()
+      .then((response) => {
+        // Assuming response.data is an array of news items
+        // with fields: id, title, subtitle, image, category, date
+        setNewsData(response.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error fetching news:', err);
+        setError('Failed to load news. Please try again later.');
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return <div className="app-container"><p>Loading news...</p></div>;
+  }
+
+  if (error) {
+    return <div className="app-container"><p className="error">{error}</p></div>;
+  }
+
   if (!newsData || newsData.length === 0) {
     return <div className="app-container"><p>No news available</p></div>;
   }

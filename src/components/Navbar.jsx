@@ -51,9 +51,9 @@ function Navbar() {
         <div className="nav-main">
           <div className="nav-container">
             {/* Brand / Logo */}
-            <Link to="/" className="brand-link">
-              <span className="brand-name">വടകര വാർത്തകൾ</span>
-            </Link>
+        <Link to="/login" >   {/* ← changed from "/" to "/login" */}
+  <span className="brand-name">വടകര വാർത്തകൾ</span>
+</Link>
 
             {/* Desktop Navigation – hidden on mobile, shown on larger screens */}
             <nav className="desktop-nav">
