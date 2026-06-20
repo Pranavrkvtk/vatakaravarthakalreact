@@ -2,7 +2,10 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
-import "./Login.css";   // ← import the CSS
+import "./Login.css";
+
+// Optional: import your configured axios instance
+// import api from '../api/axiosConfig';
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -13,7 +16,6 @@ function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
 
-  // Remember me
   useEffect(() => {
     const remembered = localStorage.getItem("rememberedUser");
     if (remembered) {
@@ -30,25 +32,59 @@ function Login() {
       return;
     }
     setLoading(true);
+
     try {
+      // Use a configured axios instance (or plain axios with full URL)
       const response = await axios.post(
         "http://localhost:8080/api/auth/login",
-        { username, password }
+        { username, password },
+        {
+          headers: { "Content-Type": "application/json" },
+          timeout: 10000, // 10 seconds
+        }
       );
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("role", response.data.role);
+
+      // Log the full response for debugging (remove in production)
+      console.log("✅ Login success:", response.data);
+
+      const { token, role } = response.data;
+
+      if (!token) {
+        throw new Error("No token received from server");
+      }
+
+      // Store tokens
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", role);
+
       if (rememberMe) {
         localStorage.setItem("rememberedUser", username);
       } else {
         localStorage.removeItem("rememberedUser");
       }
-      if (response.data.role === "ADMIN") {
+
+      // Redirect based on role
+      if (role === "ADMIN") {
         navigate("/admin");
       } else {
         navigate("/");
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Invalid credentials");
+      console.error("❌ Login error:", err);
+
+      let errorMessage = "Invalid credentials. Please try again.";
+
+      if (err.code === "ECONNABORTED") {
+        errorMessage = "Request timed out – server may be slow.";
+      } else if (err.response) {
+        // Server responded with a status other than 2xx
+        errorMessage = err.response.data?.message || err.response.statusText || "Server error.";
+      } else if (err.request) {
+        // No response from server (network / CORS)
+        errorMessage = "Network error – cannot reach the server. Check if backend is running.";
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
