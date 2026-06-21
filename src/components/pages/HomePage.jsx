@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getAllNews } from '../../services/newsService';
+import { getAllNews } from '../../api/news'; // Updated import path
 import { Rss, Search, ChevronLeft, ChevronRight, Clock, Zap, Menu, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import './HomePage.css';
@@ -16,7 +16,7 @@ export const CATEGORY_COLORS = {
 };
 
 // ----------------------------------------------------------------
-// Reusable components (same as before)
+// Reusable components
 // ----------------------------------------------------------------
 
 const DateLine = ({ date, className = '' }) => (
@@ -194,7 +194,7 @@ const NewsGrid = ({ newsData }) => {
 };
 
 // ----------------------------------------------------------------
-// HomePage – now fetches data internally
+// HomePage – fetches data using the API
 // ----------------------------------------------------------------
 const HomePage = () => {
   const [newsData, setNewsData] = useState([]);
@@ -203,10 +203,10 @@ const HomePage = () => {
 
   useEffect(() => {
     getAllNews()
-      .then((response) => {
-        // Assuming response.data is an array of news items
-        // with fields: id, title, subtitle, image, category, date
-        setNewsData(response.data);
+      .then((data) => {
+        // getAllNews from api/news.js returns data directly (not response.data)
+        // because the function already extracts response.data
+        setNewsData(data);
         setLoading(false);
       })
       .catch((err) => {
