@@ -7,7 +7,7 @@ import MediaTab from "./MediaTab";
 import NewsModal from "./NewsModal";
 import NewsTab from "./NewsTab";
 import AdsTab from "./AdsTab";
-import CategoriesTab from "./CategoriesTab";    // <-- NEW IMPORT
+import CategoriesTab from "./CategoriesTab";
 import { getAllNews, createNews, updateNews, deleteNews, bulkAction } from '../../api/news';
 
 // ---------- Loading Spinner ----------
@@ -139,7 +139,7 @@ const DateTimeWidget = ({ isMobile, currentTime }) => (
   </div>
 );
 
-// ---------- Dashboard Tab with KPIs ----------
+// ---------- Dashboard Tab with KPIs (unchanged) ----------
 const DashboardTab = ({ stats }) => {
   const kpis = [
     {
@@ -235,7 +235,7 @@ const DashboardTab = ({ stats }) => {
   );
 };
 
-// ---------- RichTextEditor (shared) ----------
+// ---------- RichTextEditor (unchanged) ----------
 const rteBtnStyle = {
   background: "#fff",
   border: "1px solid var(--border-light)",
@@ -304,42 +304,16 @@ function RichTextEditor({ value, onChange }) {
           flexWrap: "wrap",
         }}
       >
-        <Btn title="Bold" onClick={() => exec("bold")}>
-          B
-        </Btn>
-        <Btn title="Italic" onClick={() => exec("italic")}>
-          <em>I</em>
-        </Btn>
-        <Btn title="Underline" onClick={() => exec("underline")}>
-          <u>U</u>
-        </Btn>
-        <Btn title="Heading" onClick={() => exec("formatBlock", "<h2>")}>
-          H2
-        </Btn>
-        <Btn title="Paragraph" onClick={() => exec("formatBlock", "<p>")}>
-          P
-        </Btn>
-        <Btn
-          title="Bullet list"
-          onClick={() => exec("insertUnorderedList")}
-        >
-          •≡
-        </Btn>
-        <Btn
-          title="Numbered list"
-          onClick={() => exec("insertOrderedList")}
-        >
-          1≡
-        </Btn>
-        <Btn title="Quote" onClick={() => exec("formatBlock", "<blockquote>")}>
-          ❝
-        </Btn>
-        <Btn title="Insert link" onClick={insertLink}>
-          🔗
-        </Btn>
-        <Btn title="Clear formatting" onClick={() => exec("removeFormat")}>
-          ⨯
-        </Btn>
+        <Btn title="Bold" onClick={() => exec("bold")}>B</Btn>
+        <Btn title="Italic" onClick={() => exec("italic")}><em>I</em></Btn>
+        <Btn title="Underline" onClick={() => exec("underline")}><u>U</u></Btn>
+        <Btn title="Heading" onClick={() => exec("formatBlock", "<h2>")}>H2</Btn>
+        <Btn title="Paragraph" onClick={() => exec("formatBlock", "<p>")}>P</Btn>
+        <Btn title="Bullet list" onClick={() => exec("insertUnorderedList")}>•≡</Btn>
+        <Btn title="Numbered list" onClick={() => exec("insertOrderedList")}>1≡</Btn>
+        <Btn title="Quote" onClick={() => exec("formatBlock", "<blockquote>")}>❝</Btn>
+        <Btn title="Insert link" onClick={insertLink}>🔗</Btn>
+        <Btn title="Clear formatting" onClick={() => exec("removeFormat")}>⨯</Btn>
       </div>
       <div
         ref={editorRef}
@@ -362,7 +336,7 @@ function RichTextEditor({ value, onChange }) {
   );
 }
 
-// ---------- Status badge (for posts) ----------
+// ---------- Status badge (unchanged) ----------
 const STATUS_STYLES = {
   published: { bg: "#dcfce7", color: "#16a34a" },
   draft: { bg: "#fef3c7", color: "#d97706" },
@@ -410,10 +384,9 @@ const qeLabelStyle = {
   letterSpacing: 0.3,
 };
 
-// ---------- Preview Modal ----------
+// ---------- Preview Modal (placeholder) ----------
 function PreviewModal({ item, onClose }) {
-  // ... (unchanged)
-  return null; // placeholder - you have your own implementation
+  return null; // your implementation here
 }
 
 // ---------- MAIN ADMIN DASHBOARD ----------
@@ -428,6 +401,8 @@ export default function AdminDashboard() {
 
   // ---- News state ----
   const [news, setNews] = useState([]);
+
+  // ---- Dashboard stats (from API) ----
   const [stats, setStats] = useState({
     total: 0,
     published: 0,
@@ -435,6 +410,7 @@ export default function AdminDashboard() {
     drafts: 0,
     trash: 0,
   });
+  const [statsLoading, setStatsLoading] = useState(false);
 
   // ---- Categories state ----
   const [categories, setCategories] = useState([]);
@@ -501,34 +477,45 @@ export default function AdminDashboard() {
     return () => clearInterval(timer);
   }, []);
 
-  // ---------- News ----------
-  const fetchNews = async () => {
+  // ---------- Unified data loader (news + stats) ----------
+  const loadAllData = async () => {
     setLoading(true);
     try {
-      const data = await getAllNews();
-      setNews(data);
+      const newsData = await getAllNews();
+      setNews(newsData);
+
+      // Fetch dashboard stats
+      const statsResponse = await api.get("/dashboard/stats");
+      const statsObj = {
+        total: 0,
+        published: 0,
+        scheduled: 0,
+        drafts: 0,
+        trash: 0,
+      };
+      statsResponse.data.forEach((kpi) => {
+        switch (kpi.label) {
+          case "Total Posts": statsObj.total = kpi.value; break;
+          case "Published": statsObj.published = kpi.value; break;
+          case "Scheduled": statsObj.scheduled = kpi.value; break;
+          case "Drafts": statsObj.drafts = kpi.value; break;
+          case "Trash": statsObj.trash = kpi.value; break;
+          default: break;
+        }
+      });
+      setStats(statsObj);
     } catch (err) {
-      setError("Failed to load news");
+      setError("Failed to load data");
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
+  // Load data on mount
   useEffect(() => {
-    fetchNews();
+    loadAllData();
   }, []);
-
-  useEffect(() => {
-    setStats({
-      total: news.length,
-      published: news.filter((n) => n.status === "published").length,
-      scheduled: news.filter((n) => n.status === "scheduled").length,
-      drafts: news.filter((n) => n.status === "draft" || n.status === "pending")
-        .length,
-      trash: news.filter((n) => n.status === "trash").length,
-    });
-  }, [news]);
 
   // ---------- Categories (Backend integrated) ----------
   const fetchCategories = async () => {
@@ -1088,7 +1075,7 @@ export default function AdminDashboard() {
             } else {
               await createNews(payload);
             }
-            await fetchNews();
+            await loadAllData(); // Refresh both news and stats
           } catch (err) {
             // Fallback
             setNews((prev) =>
