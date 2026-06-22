@@ -8,8 +8,7 @@ import NewsModal from "./NewsModal";
 import NewsTab from "./NewsTab";
 import AdsTab from "./AdsTab";
 import CategoriesTab from "./CategoriesTab";
-import { getAllNews, createNews, updateNews, deleteNews, bulkAction } from '../../api/news';
-
+import { getAllNewsAdmin as getAllNews, createNews, updateNews, deleteNews, bulkAction } from '../../api/news';
 // ---------- Loading Spinner ----------
 const LoadingSpinner = () => (
   <div style={{ textAlign: "center", padding: "40px" }}>
