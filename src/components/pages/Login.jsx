@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom"; // ✅ Added Link
 import { Eye, EyeOff } from "lucide-react";
 import "./Login.css";
-
-// Optional: import your configured axios instance
-// import api from '../api/axiosConfig';
 
 function Login() {
   const [username, setUsername] = useState("");
@@ -34,17 +31,15 @@ function Login() {
     setLoading(true);
 
     try {
-      // Use a configured axios instance (or plain axios with full URL)
       const response = await axios.post(
         "http://localhost:8080/api/auth/login",
         { username, password },
         {
           headers: { "Content-Type": "application/json" },
-          timeout: 10000, // 10 seconds
+          timeout: 10000,
         }
       );
 
-      // Log the full response for debugging (remove in production)
       console.log("✅ Login success:", response.data);
 
       const { token, role } = response.data;
@@ -53,7 +48,6 @@ function Login() {
         throw new Error("No token received from server");
       }
 
-      // Store tokens
       localStorage.setItem("token", token);
       localStorage.setItem("role", role);
 
@@ -63,7 +57,6 @@ function Login() {
         localStorage.removeItem("rememberedUser");
       }
 
-      // Redirect based on role
       if (role === "ADMIN") {
         navigate("/admin");
       } else {
@@ -77,10 +70,8 @@ function Login() {
       if (err.code === "ECONNABORTED") {
         errorMessage = "Request timed out – server may be slow.";
       } else if (err.response) {
-        // Server responded with a status other than 2xx
         errorMessage = err.response.data?.message || err.response.statusText || "Server error.";
       } else if (err.request) {
-        // No response from server (network / CORS)
         errorMessage = "Network error – cannot reach the server. Check if backend is running.";
       }
 
@@ -160,8 +151,9 @@ function Login() {
             )}
           </button>
 
+          {/* ✅ Updated footer with Register link */}
           <p className="login-footer">
-            No account? <a href="#">Contact Admin</a>
+            Don't have an account? <Link to="/register">Sign Up</Link>
           </p>
         </form>
       </div>

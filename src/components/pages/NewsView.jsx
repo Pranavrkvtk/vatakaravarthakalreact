@@ -1,6 +1,8 @@
+// src/components/pages/NewsView.jsx
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getNewsById } from '../../api/news';
+import { getImageSrc } from '../../utils/imageUtils';
 import { ArrowLeft, Calendar, Eye, ThumbsUp, Share2, Clock } from 'lucide-react';
 import './NewsView.css';
 
@@ -10,10 +12,20 @@ const NewsView = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [liked, setLiked] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     getNewsById(id)
       .then((data) => {
+        console.log('=== FETCHED NEWS ===');
+        console.log('ID:', data.id);
+        console.log('Title:', data.title);
+        console.log('Image exists:', !!data.image);
+        if (data.image) {
+          console.log('Image length:', data.image.length);
+          console.log('Image type:', data.image.startsWith('data:') ? 'base64' : 'url');
+          console.log('Image preview:', data.image.substring(0, 100) + '...');
+        }
         setNews(data);
         setLoading(false);
       })
@@ -25,7 +37,6 @@ const NewsView = () => {
   }, [id]);
 
   const handleLike = () => {
-    // optimistic update – you can also call API to persist
     setLiked(!liked);
     setNews((prev) => ({
       ...prev,
@@ -49,28 +60,38 @@ const NewsView = () => {
   if (error) return <div className="news-view-container error">{error}</div>;
   if (!news) return <div className="news-view-container">Article not found.</div>;
 
+  const imageSrc = getImageSrc(news.image);
+
   return (
     <div className="news-view-container">
-      {/* Back link */}
       <Link to="/" className="back-link">
         <ArrowLeft size={18} /> Back to Home
       </Link>
 
-      {/* Article card */}
       <article className="news-article">
-        {/* Image with overlay gradient */}
-        <div className="article-image-wrapper">
-          <img src={news.image || '/placeholder-image.jpg'} alt={news.title} />
-          <div className="image-overlay">
-            <span className="category-badge">{news.category || 'General'}</span>
+        {/* ✅ Image display - NO INLINE STYLES */}
+        {news.image && (
+          <div className="article-image-wrapper">
+            <img 
+              src={imageSrc || '/placeholder-image.jpg'}
+              alt={news.title}
+              onError={(e) => {
+                console.error('Image failed to load:', imageSrc);
+                setImageError(true);
+                e.target.src = '/placeholder-image.jpg';
+              }}
+              // ✅ REMOVED: style prop - let CSS handle it
+            />
+            <div className="image-overlay">
+              <span className="category-badge">{news.category || 'General'}</span>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Meta row */}
         <div className="article-meta">
           <span className="meta-item">
             <Calendar size={16} />
-            {new Date(news.publishedDate).toLocaleDateString('en-IN', {
+            {new Date(news.publishedDate || news.createdAt).toLocaleDateString('en-IN', {
               day: 'numeric',
               month: 'long',
               year: 'numeric',
@@ -78,7 +99,7 @@ const NewsView = () => {
           </span>
           <span className="meta-item">
             <Clock size={16} />
-            {new Date(news.publishedDate).toLocaleTimeString('en-IN', {
+            {new Date(news.publishedDate || news.createdAt).toLocaleTimeString('en-IN', {
               hour: '2-digit',
               minute: '2-digit',
             })}
@@ -88,17 +109,24 @@ const NewsView = () => {
           </span>
         </div>
 
-        {/* Title & subtitle */}
         <h1 className="article-title">{news.title}</h1>
         {news.subtitle && <h2 className="article-subtitle">{news.subtitle}</h2>}
 
-        {/* Content (rendered as HTML) */}
         <div
           className="article-content"
           dangerouslySetInnerHTML={{ __html: news.content }}
         />
 
-        {/* Action buttons */}
+        {news.tags && (
+          <div className="article-tags">
+            {news.tags.split(',').map((tag, index) => (
+              <span key={index} className="tag">
+                #{tag.trim()}
+              </span>
+            ))}
+          </div>
+        )}
+
         <div className="article-actions">
           <button
             className={`action-btn like-btn ${liked ? 'liked' : ''}`}

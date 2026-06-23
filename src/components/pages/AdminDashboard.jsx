@@ -959,42 +959,69 @@ export default function AdminDashboard() {
         )}
       </div>
 
-      {/* News Modal */}
-      <NewsModal
-        isOpen={isAddModalOpen || isEditModalOpen}
-        onClose={() => {
-          setIsAddModalOpen(false);
-          setIsEditModalOpen(false);
-          setEditingNews(null);
-        }}
-        news={editingNews}
-        categories={categories}
-        onAddCategory={handleAddCategory}
-        onSave={async (data) => {
-          try {
-            let payload = data;
-            if (editingNews) {
-              payload = { ...editingNews, ...data };
-            }
-            if (editingNews) {
-              await updateNews(editingNews.id, payload);
-            } else {
-              await createNews(payload);
-            }
-            await loadAllData(); // Refresh both news and stats
-          } catch (err) {
-            // Fallback
-            setNews((prev) =>
-              editingNews
-                ? prev.map((n) =>
-                    n.id === editingNews.id ? { ...n, ...data } : n
-                  )
-                : [...prev, { ...data, id: Date.now(), views: 0, likes: 0, createdAt: new Date().toLocaleDateString() }]
-            );
-          }
-          Swal.fire("Saved!", "", "success");
-        }}
-      />
+// In AdminDashboard.jsx - update the NewsModal section
+
+<NewsModal
+  isOpen={isAddModalOpen || isEditModalOpen}
+  onClose={() => {
+    setIsAddModalOpen(false);
+    setIsEditModalOpen(false);
+    setEditingNews(null);
+  }}
+  news={editingNews}
+  categories={categories}
+  onAddCategory={handleAddCategory}
+  onSave={async (data) => {
+    // 🔍 Debug logging
+    console.log('=== SAVING FROM ADMIN DASHBOARD ===');
+    console.log('Data:', data);
+    console.log('Image exists:', !!data.image);
+    if (data.image) {
+      console.log('Image length:', data.image.length);
+      console.log('Image type:', data.image.startsWith('data:') ? 'base64' : 'url');
+    }
+    
+    try {
+      if (editingNews) {
+        // For editing, only send the fields that have changed
+        const payload = { ...editingNews, ...data };
+        await updateNews(editingNews.id, payload);
+      } else {
+        await createNews(data);
+      }
+      
+      await loadAllData(); // Refresh both news and stats
+      Swal.fire('Success!', 'News saved successfully', 'success');
+      setIsAddModalOpen(false);
+      setIsEditModalOpen(false);
+      setEditingNews(null);
+    } catch (err) {
+      console.error('Error saving news:', err);
+      
+      // Fallback for offline
+      const newItem = {
+        ...data,
+        id: editingNews ? editingNews.id : Date.now(),
+        views: 0,
+        likes: 0,
+        shares: 0,
+        createdAt: new Date().toISOString(),
+        publishedDate: data.status === 'published' ? new Date().toISOString() : null,
+      };
+      
+      setNews((prev) => 
+        editingNews 
+          ? prev.map((n) => n.id === editingNews.id ? { ...n, ...newItem } : n)
+          : [newItem, ...prev]
+      );
+      
+      Swal.fire('Saved Locally', 'Article saved in local mode', 'success');
+      setIsAddModalOpen(false);
+      setIsEditModalOpen(false);
+      setEditingNews(null);
+    }
+  }}
+/>
 
       {/* Preview Modal */}
       <PreviewModal item={previewItem} onClose={() => setPreviewItem(null)} />

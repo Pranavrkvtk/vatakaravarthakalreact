@@ -1,6 +1,7 @@
-// NewsModal.js
+// src/components/pages/NewsModal.jsx
 import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
+import { compressImage } from '../../utils/imageUtils';
 
 // ---------- Rich Text Editor ----------
 const rteBtnStyle = {
@@ -21,16 +22,14 @@ const rteBtnStyle = {
 function RichTextEditor({ value, onChange }) {
   const editorRef = React.useRef(null);
 
-  // ✅ FIX: Update editor content when `value` changes from parent
   useEffect(() => {
     if (editorRef.current) {
       const current = editorRef.current.innerHTML;
-      // Only update if different – preserves cursor position
       if (value !== current) {
         editorRef.current.innerHTML = value || "";
       }
     }
-  }, [value]); // 👈 now reacts to prop changes
+  }, [value]);
 
   const handleInput = () => {
     if (editorRef.current) onChange(editorRef.current.innerHTML);
@@ -146,11 +145,11 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
     scheduledDate: "",
   });
   const [imageMode, setImageMode] = useState("url");
+  const [imagePreview, setImagePreview] = useState("");
 
   // Reset form when modal opens or `news` changes
   useEffect(() => {
     if (news) {
-      // Ensure scheduledDate is correctly formatted if it exists
       const scheduled = news.scheduledDate
         ? new Date(news.scheduledDate).toISOString().slice(0, 16)
         : "";
@@ -159,6 +158,7 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
         scheduledDate: scheduled,
       });
       setImageMode(news.image && news.image.startsWith("data:") ? "upload" : "url");
+      setImagePreview(news.image || "");
     } else {
       setForm({
         title: "",
@@ -171,33 +171,82 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
         scheduledDate: "",
       });
       setImageMode("url");
+      setImagePreview("");
     }
   }, [news, isOpen]);
 
   if (!isOpen) return null;
 
+  // ✅ UPDATED: Handle image upload with compression
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) {
+      return;
+    }
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      Swal.fire('Error', 'Please select an image file', 'error');
+      return;
+    }
+    
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      Swal.fire('Error', 'Image must be less than 2MB', 'error');
+      return;
+    }
+    
+    try {
+      // Show loading
+      Swal.fire({
+        title: 'Processing...',
+        text: 'Compressing image...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+      
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        try {
+          // Compress the image
+          const compressed = await compressImage(event.target.result, 800, 600, 0.7);
+          setForm((f) => ({ ...f, image: compressed }));
+          setImagePreview(compressed);
+          Swal.close();
+        } catch (error) {
+          console.error('Error compressing:', error);
+          Swal.fire('Error', 'Failed to process image', 'error');
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Error:', error);
+      Swal.fire('Error', 'Failed to upload image', 'error');
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // 🔍 Debug logging
+    console.log('=== SAVING NEWS ===');
+    console.log('Title:', form.title);
+    console.log('Image exists:', !!form.image);
+    if (form.image) {
+      console.log('Image length:', form.image.length);
+      console.log('Image starts with data:', form.image.startsWith('data:'));
+    }
+    
     if (form.status === "scheduled" && !form.scheduledDate) {
       Swal.fire("Missing date", "Pick a publish date/time for a scheduled post.", "warning");
       return;
     }
-    // 👇 Debug log – verify content before sending
-    console.log("Saving news with content:", form.content);
+    
     onSave(form);
     onClose();
-  };
-
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      Swal.fire("Error", "Please choose an image file", "error");
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => setForm((f) => ({ ...f, image: reader.result }));
-    reader.readAsDataURL(file);
   };
 
   const handleCategoryChange = (e) => {
@@ -213,7 +262,6 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
   };
 
   return (
-    // ---------- FULL‑SCREEN OVERLAY (white background) ----------
     <div
       style={{
         position: "fixed",
@@ -225,7 +273,7 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
         zIndex: 9999,
       }}
     >
-      {/* Close button – fixed at top‑right */}
+      {/* Close button */}
       <button
         type="button"
         onClick={onClose}
@@ -254,7 +302,7 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
         ✕
       </button>
 
-      {/* Form container – full width/height with scroll */}
+      {/* Form container */}
       <div
         style={{
           width: "100%",
@@ -278,7 +326,7 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
         </h3>
 
         <form onSubmit={handleSubmit}>
-          {/* Title + Subtitle side by side */}
+          {/* Title + Subtitle */}
           <div style={{ display: "flex", gap: 20, marginBottom: 20, flexWrap: "wrap" }}>
             <div style={{ flex: "1 1 320px" }}>
               <label style={labelStyle}>Title *</label>
@@ -304,7 +352,6 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
           {/* Content */}
           <div style={{ marginBottom: 20 }}>
             <label style={labelStyle}>Content</label>
-            {/* ✅ Key ensures editor re-mounts when news changes (prevents stale data) */}
             <RichTextEditor
               key={news ? news.id : "new"}
               value={form.content}
@@ -364,7 +411,7 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
             </div>
           )}
 
-          {/* Featured Image */}
+          {/* ✅ UPDATED: Featured Image with better handling */}
           <div style={{ marginBottom: 24 }}>
             <label style={labelStyle}>Featured Image</label>
             <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
@@ -383,20 +430,31 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
                 URL
               </button>
             </div>
+            
             {imageMode === "upload" ? (
-              <input type="file" accept="image/*" onChange={handleImageUpload} />
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={handleImageUpload}
+                style={{ ...inputStyle, padding: "8px" }}
+              />
             ) : (
               <input
                 placeholder="https://example.com/image.jpg"
                 value={form.image && !form.image.startsWith("data:") ? form.image : ""}
-                onChange={(e) => setForm({ ...form, image: e.target.value })}
+                onChange={(e) => {
+                  setForm({ ...form, image: e.target.value });
+                  setImagePreview(e.target.value);
+                }}
                 style={inputStyle}
               />
             )}
-            {form.image && (
+            
+            {/* ✅ Image Preview */}
+            {imagePreview && (
               <div style={{ marginTop: 12, position: "relative", display: "inline-block" }}>
                 <img
-                  src={form.image}
+                  src={imagePreview}
                   alt="Preview"
                   style={{
                     maxWidth: 320,
@@ -405,10 +463,17 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
                     border: "1px solid var(--border-light)",
                     display: "block",
                   }}
+                  onError={(e) => {
+                    console.error('Preview image failed to load:', imagePreview);
+                    e.target.src = '/placeholder-image.jpg';
+                  }}
                 />
                 <button
                   type="button"
-                  onClick={() => setForm({ ...form, image: "" })}
+                  onClick={() => {
+                    setForm({ ...form, image: "" });
+                    setImagePreview("");
+                  }}
                   style={{
                     position: "absolute",
                     top: -8,

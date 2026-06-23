@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Swal from 'sweetalert2';
 
-// ---------- Local LoadingSpinner (reused from main dashboard) ----------
+// ---------- Local LoadingSpinner ----------
 const LoadingSpinner = () => (
   <div style={{ textAlign: 'center', padding: '40px' }}>
     <div
@@ -19,11 +19,18 @@ const LoadingSpinner = () => (
   </div>
 );
 
-// ---------- Categories Tab (redesigned) ----------
-function CategoriesTab({ categories, onAdd, onRename, onDelete, loading }) {
+// ---------- Categories Tab ----------
+function CategoriesTab({ categories = [], onAdd, onRename, onDelete, loading }) {
   const [newCategory, setNewCategory] = useState('');
   const [editingName, setEditingName] = useState(null);
   const [editValue, setEditValue] = useState('');
+
+  // Debug: Log categories to see what's coming in
+  console.log('CategoriesTab received:', categories);
+  console.log('Is array?', Array.isArray(categories));
+
+  // ✅ Safety: Ensure categories is an array
+  const safeCategories = Array.isArray(categories) ? categories : [];
 
   const handleAdd = () => {
     const name = newCategory.trim();
@@ -33,6 +40,10 @@ function CategoriesTab({ categories, onAdd, onRename, onDelete, loading }) {
   };
 
   const startEdit = (cat) => {
+    if (!cat || typeof cat !== 'object' || !cat.name) {
+      console.error('Invalid category object:', cat);
+      return;
+    }
     setEditingName(cat.name);
     setEditValue(cat.name);
   };
@@ -48,7 +59,7 @@ function CategoriesTab({ categories, onAdd, onRename, onDelete, loading }) {
       cancelEdit();
       return;
     }
-    if (categories.some((c) => c.name === newName && c.name !== oldName)) {
+    if (safeCategories.some((c) => c.name === newName && c.name !== oldName)) {
       Swal.fire('Name already exists', 'Please choose a different name.', 'warning');
       return;
     }
@@ -135,7 +146,7 @@ function CategoriesTab({ categories, onAdd, onRename, onDelete, loading }) {
       {/* Category list */}
       {loading ? (
         <LoadingSpinner />
-      ) : categories.length === 0 ? (
+      ) : safeCategories.length === 0 ? (
         <div
           style={{
             textAlign: 'center',
@@ -154,11 +165,62 @@ function CategoriesTab({ categories, onAdd, onRename, onDelete, loading }) {
             gap: 14,
           }}
         >
-          {categories.map((cat) => {
-            const isEditing = editingName === cat.name;
+          {safeCategories.map((cat, index) => {
+            // ✅ CRITICAL FIX: Check if cat is an object
+            if (typeof cat !== 'object' || cat === null) {
+              console.warn('Category item is not an object:', cat);
+              return null;
+            }
+
+            // ✅ CRITICAL FIX: Get name and count safely
+            const categoryName = cat.name || String(cat) || `Category ${index}`;
+            const categoryCount = typeof cat.count === 'number' ? cat.count : 0;
+
+            // If cat is just a string, convert to object
+            if (typeof cat === 'string') {
+              return (
+                <div
+                  key={index}
+                  style={{
+                    background: 'var(--bg-base)',
+                    borderRadius: 14,
+                    padding: '14px 18px',
+                    border: '1px solid var(--border-light)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontSize: 18 }}>📁</span>
+                    <span style={{ fontWeight: 500, fontSize: 15, color: 'var(--text-primary)' }}>
+                      {cat}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => handleDelete(cat)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontSize: 15,
+                      color: 'var(--error)',
+                      padding: '4px 8px',
+                      borderRadius: 6,
+                    }}
+                    title="Delete"
+                  >
+                    🗑️
+                  </button>
+                </div>
+              );
+            }
+
+            const isEditing = editingName === categoryName;
+
             return (
               <div
-                key={cat.name}
+                key={categoryName || index}
                 style={{
                   background: 'var(--bg-base)',
                   borderRadius: 14,
@@ -177,7 +239,7 @@ function CategoriesTab({ categories, onAdd, onRename, onDelete, loading }) {
                       type="text"
                       value={editValue}
                       onChange={(e) => setEditValue(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && saveEdit(cat.name)}
+                      onKeyDown={(e) => e.key === 'Enter' && saveEdit(categoryName)}
                       autoFocus
                       style={{
                         flex: 1,
@@ -190,7 +252,7 @@ function CategoriesTab({ categories, onAdd, onRename, onDelete, loading }) {
                       }}
                     />
                     <button
-                      onClick={() => saveEdit(cat.name)}
+                      onClick={() => saveEdit(categoryName)}
                       style={{
                         background: 'var(--primary)',
                         color: '#fff',
@@ -222,10 +284,11 @@ function CategoriesTab({ categories, onAdd, onRename, onDelete, loading }) {
                   <>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <span style={{ fontSize: 18 }}>📁</span>
+                      {/* ✅ CRITICAL FIX: Render the name property, not the whole object */}
                       <span style={{ fontWeight: 500, fontSize: 15, color: 'var(--text-primary)' }}>
-                        {cat.name}
+                        {categoryName}
                       </span>
-                      {cat.count !== undefined && (
+                      {categoryCount > 0 && (
                         <span
                           style={{
                             background: 'var(--border-light)',
@@ -237,7 +300,7 @@ function CategoriesTab({ categories, onAdd, onRename, onDelete, loading }) {
                             marginLeft: 4,
                           }}
                         >
-                          {cat.count}
+                          {categoryCount}
                         </span>
                       )}
                     </div>
@@ -258,7 +321,7 @@ function CategoriesTab({ categories, onAdd, onRename, onDelete, loading }) {
                         ✏️
                       </button>
                       <button
-                        onClick={() => handleDelete(cat.name)}
+                        onClick={() => handleDelete(categoryName)}
                         style={{
                           background: 'none',
                           border: 'none',
