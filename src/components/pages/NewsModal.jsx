@@ -21,11 +21,16 @@ const rteBtnStyle = {
 function RichTextEditor({ value, onChange }) {
   const editorRef = React.useRef(null);
 
+  // ✅ FIX: Update editor content when `value` changes from parent
   useEffect(() => {
     if (editorRef.current) {
-      editorRef.current.innerHTML = value || "";
+      const current = editorRef.current.innerHTML;
+      // Only update if different – preserves cursor position
+      if (value !== current) {
+        editorRef.current.innerHTML = value || "";
+      }
     }
-  }, []);
+  }, [value]); // 👈 now reacts to prop changes
 
   const handleInput = () => {
     if (editorRef.current) onChange(editorRef.current.innerHTML);
@@ -142,9 +147,17 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
   });
   const [imageMode, setImageMode] = useState("url");
 
+  // Reset form when modal opens or `news` changes
   useEffect(() => {
     if (news) {
-      setForm({ scheduledDate: "", ...news });
+      // Ensure scheduledDate is correctly formatted if it exists
+      const scheduled = news.scheduledDate
+        ? new Date(news.scheduledDate).toISOString().slice(0, 16)
+        : "";
+      setForm({
+        ...news,
+        scheduledDate: scheduled,
+      });
       setImageMode(news.image && news.image.startsWith("data:") ? "upload" : "url");
     } else {
       setForm({
@@ -169,6 +182,8 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
       Swal.fire("Missing date", "Pick a publish date/time for a scheduled post.", "warning");
       return;
     }
+    // 👇 Debug log – verify content before sending
+    console.log("Saving news with content:", form.content);
     onSave(form);
     onClose();
   };
@@ -289,6 +304,7 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
           {/* Content */}
           <div style={{ marginBottom: 20 }}>
             <label style={labelStyle}>Content</label>
+            {/* ✅ Key ensures editor re-mounts when news changes (prevents stale data) */}
             <RichTextEditor
               key={news ? news.id : "new"}
               value={form.content}

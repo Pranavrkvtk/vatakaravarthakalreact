@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getAllNews } from '../../api/news'; // Updated import path
+import { getAllNews } from '../../api/news';
 import { Rss, Search, ChevronLeft, ChevronRight, Clock, Zap, Menu, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import './HomePage.css';
@@ -13,6 +13,16 @@ export const CATEGORY_COLORS = {
   'ചരമം': '#d97706',
   'കായികം': '#059669',
   'യാത്ര': '#0284c7',
+};
+
+// ----------------------------------------------------------------
+// Helper: format date from backend (publishedDate or createdAt)
+// ----------------------------------------------------------------
+const formatDate = (news) => {
+  const raw = news.publishedDate || news.createdAt || news.date;
+  if (!raw) return 'Just now';
+  const d = new Date(raw);
+  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
 // ----------------------------------------------------------------
@@ -60,22 +70,22 @@ const Sidebar = ({ newsData }) => {
       {tab === 'latest' && list.length > 0 && (
         <div className="sidebar-featured">
           <div className="img-wrap">
-            <img src={list[0].image} alt="" />
+            <img src={list[0].image || '/placeholder-image.jpg'} alt="" />
             <div className="overlay"><p>{list[0].title}</p></div>
           </div>
-          <DateLine date={list[0].date} className="mt-2" />
+          <DateLine date={formatDate(list[0])} className="mt-2" />
         </div>
       )}
 
       <ul className="sidebar-news-list">
         {list.slice(1).map((n) => (
           <li key={n.id}>
-            <img src={n.image} alt="" />
+            <img src={n.image || '/placeholder-image.jpg'} alt="" />
             <div className="info">
               <Link to={`/news/${n.id}`}>
                 <p>{n.title}</p>
               </Link>
-              <DateLine date={n.date} />
+              <DateLine date={formatDate(n)} />
             </div>
           </li>
         ))}
@@ -126,7 +136,7 @@ const BreakingTicker = ({ newsData }) => {
     <div className="ticker">
       <span className="badge"><Zap size={12} /> TRENDING</span>
       <p className="text">{item.title}</p>
-      <span className="date">{item.date}</span>
+      <span className="date">{formatDate(item)}</span>
       <div className="controls">
         <button onClick={() => go(-1)}><ChevronLeft size={15} /></button>
         <button onClick={() => go(1)}><ChevronRight size={15} /></button>
@@ -139,18 +149,18 @@ const FeaturedNews = ({ news }) => {
   if (!news) return null;
   return (
     <div className="featured-news">
-      <img src={news.image} alt="" />
+      <img src={news.image || '/placeholder-image.jpg'} alt="" />
       <span
         className="category-tag"
         style={{ backgroundColor: CATEGORY_COLORS[news.category] || '#4338ca' }}
       >
-        {news.category}
+        {news.category || 'Uncategorized'}
       </span>
       <div className="overlay">
         <Link to={`/news/${news.id}`}>
           <h2>{news.title}</h2>
         </Link>
-        <DateLine date={news.date} className="text-white/70" />
+        <DateLine date={formatDate(news)} className="text-white/70" />
       </div>
     </div>
   );
@@ -159,12 +169,12 @@ const FeaturedNews = ({ news }) => {
 const NewsCard = ({ news }) => (
   <div className="news-card">
     <div className="img-wrap">
-      <img src={news.image} alt="" />
+      <img src={news.image || '/placeholder-image.jpg'} alt="" />
       <span
         className="category-tag"
         style={{ backgroundColor: CATEGORY_COLORS[news.category] || '#4338ca' }}
       >
-        {news.category}
+        {news.category || 'Uncategorized'}
       </span>
     </div>
     <div className="body">
@@ -172,7 +182,7 @@ const NewsCard = ({ news }) => (
         <h3>{news.title}</h3>
       </Link>
       <div className="footer">
-        <DateLine date={news.date} />
+        <DateLine date={formatDate(news)} />
         <span className="read-more">Read <ArrowRight size={14} /></span>
       </div>
     </div>
@@ -204,8 +214,6 @@ const HomePage = () => {
   useEffect(() => {
     getAllNews()
       .then((data) => {
-        // getAllNews from api/news.js returns data directly (not response.data)
-        // because the function already extracts response.data
         setNewsData(data);
         setLoading(false);
       })

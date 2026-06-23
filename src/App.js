@@ -1,4 +1,4 @@
-// App.js (stays exactly as you have it)
+// App.js
 import React from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
@@ -11,6 +11,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import AdminDashboard from './components/pages/AdminDashboard';
 import Login from './components/pages/Login';
 import SearchPage from './components/pages/SearchPage';
+// Import the provider
+import { CategoriesProvider } from './context/CategoriesContext';
 
 function Layout() {
   const location = useLocation();
@@ -44,7 +46,10 @@ function Layout() {
 function App() {
   return (
     <BrowserRouter>
-      <Layout />
+      {/* CategoriesProvider now wraps the entire Layout, making categories available everywhere */}
+      <CategoriesProvider>
+        <Layout />
+      </CategoriesProvider>
     </BrowserRouter>
   );
 }
