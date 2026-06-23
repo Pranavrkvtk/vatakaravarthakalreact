@@ -1,4 +1,4 @@
-// AdminDashboard.js (fully integrated with api and news service)
+// src/components/pages/AdminDashboard.jsx
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import api from '../../api/axios';
 import Swal from "sweetalert2";
@@ -8,7 +8,10 @@ import NewsModal from "./NewsModal";
 import NewsTab from "./NewsTab";
 import AdsTab from "./AdsTab";
 import CategoriesTab from "./CategoriesTab";
+import DashboardTab from "./DashboardTab";  // ✅ imported premium version
+
 import { getAllNewsAdmin as getAllNews, createNews, updateNews, deleteNews, bulkAction } from '../../api/news';
+
 // ---------- Loading Spinner ----------
 const LoadingSpinner = () => (
   <div style={{ textAlign: "center", padding: "40px" }}>
@@ -138,103 +141,7 @@ const DateTimeWidget = ({ isMobile, currentTime }) => (
   </div>
 );
 
-// ---------- Dashboard Tab with KPIs (unchanged) ----------
-const DashboardTab = ({ stats }) => {
-  const kpis = [
-    {
-      label: "Total Posts",
-      value: stats.total,
-      icon: "📄",
-      iconBg: "#eef2ff",
-      color: "#4f46e5",
-    },
-    {
-      label: "Published",
-      value: stats.published,
-      icon: "✅",
-      iconBg: "#dcfce7",
-      color: "#16a34a",
-    },
-    {
-      label: "Scheduled",
-      value: stats.scheduled,
-      icon: "🗓️",
-      iconBg: "#dbeafe",
-      color: "#2563eb",
-    },
-    {
-      label: "Drafts",
-      value: stats.drafts,
-      icon: "✏️",
-      iconBg: "#fef3c7",
-      color: "#d97706",
-    },
-    {
-      label: "Trash",
-      value: stats.trash,
-      icon: "🗑️",
-      iconBg: "#fee2e2",
-      color: "#dc2626",
-    },
-  ];
-
-  return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-        gap: 20,
-      }}
-    >
-      {kpis.map((k, i) => (
-        <div
-          key={i}
-          style={{
-            background: "var(--surface)",
-            borderRadius: 16,
-            padding: 20,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-            border: "1px solid var(--border-light)",
-            display: "flex",
-            alignItems: "center",
-            gap: 16,
-          }}
-        >
-          <div
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 12,
-              background: k.iconBg,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 24,
-            }}
-          >
-            {k.icon}
-          </div>
-          <div>
-            <div
-              style={{
-                fontSize: 22,
-                fontWeight: 700,
-                color: "var(--text-primary)",
-              }}
-            >
-              {k.value}
-            </div>
-            <div style={{ fontSize: 13, color: "var(--text-secondary)" }}>
-              {k.label}
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-// ---------- RichTextEditor (unchanged) ----------
+// ---------- RichTextEditor ----------
 const rteBtnStyle = {
   background: "#fff",
   border: "1px solid var(--border-light)",
@@ -335,7 +242,7 @@ function RichTextEditor({ value, onChange }) {
   );
 }
 
-// ---------- Status badge (unchanged) ----------
+// ---------- Status badge ----------
 const STATUS_STYLES = {
   published: { bg: "#dcfce7", color: "#16a34a" },
   draft: { bg: "#fef3c7", color: "#d97706" },
@@ -807,7 +714,7 @@ export default function AdminDashboard() {
 
     switch (activeTab) {
       case "dashboard":
-        return <DashboardTab stats={stats} />;
+        return <DashboardTab stats={stats} recentPosts={news} categories={categories} />;
       case "news":
         return (
           <NewsTab
