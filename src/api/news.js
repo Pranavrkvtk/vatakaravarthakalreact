@@ -173,6 +173,51 @@ export const getNewsByStatus = async (status) => {
   return response.data;
 };
 
+// ===================== SEARCH ENDPOINTS =====================
+
+/**
+ * Get search suggestions (autocomplete)
+ * @param {string} prefix - Search prefix
+ * @returns {Promise<Array>} List of suggested titles
+ */
+export const getSearchSuggestions = async (prefix) => {
+  const response = await api.get(`/news/search/suggestions?prefix=${encodeURIComponent(prefix)}`);
+  return response.data;
+};
+
+/**
+ * Advanced search with pagination
+ * @param {string} keyword - Search keyword
+ * @param {number} page - Page number (0-based)
+ * @param {number} size - Items per page
+ * @param {string} sortBy - Sort: 'relevance', 'latest', 'oldest', 'views', 'likes'
+ * @returns {Promise<Object>} Search results with pagination
+ */
+export const searchNewsAdvanced = async (keyword, page = 0, size = 10, sortBy = 'relevance') => {
+  const response = await api.get('/news/search', {
+    params: { keyword, page, size, sortBy }
+  });
+  return response.data;
+};
+
+/**
+ * Advanced search with multiple filters
+ * @param {Object} params - Search parameters
+ * @param {string} params.keyword - Search keyword
+ * @param {string} params.category - Category filter
+ * @param {string} params.author - Author filter
+ * @param {string} params.fromDate - Start date (YYYY-MM-DD)
+ * @param {string} params.toDate - End date (YYYY-MM-DD)
+ * @param {number} params.page - Page number
+ * @param {number} params.size - Items per page
+ * @param {string} params.sortBy - Sort field
+ * @returns {Promise<Object>} Search results
+ */
+export const advancedSearch = async (params) => {
+  const response = await api.get('/news/search/advanced', { params });
+  return response.data;
+};
+
 // ===================== AD ENDPOINTS =====================
 
 /**
