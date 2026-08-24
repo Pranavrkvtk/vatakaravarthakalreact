@@ -145,4 +145,4 @@ const NewsDetail = () => {
   );
 };
 
-export default NewsDetail;
+export default NewsDetail;    

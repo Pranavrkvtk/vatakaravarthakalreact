@@ -6,12 +6,12 @@ import Footer from './components/Footer';
 import HomePage from './components/pages/HomePage';
 import NewsView from './components/pages/NewsView';
 import CategoryPage from './components/pages/CategoryPage';
-import { newsData } from './data/newsData';
+// Remove this import if you're using API data
+// import { newsData } from './data/newsData';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminDashboard from './components/pages/AdminDashboard';
 import Login from './components/pages/Login';
 import SearchPage from './components/pages/SearchPage';
-// Import the provider
 import { CategoriesProvider } from './context/CategoriesContext';
 
 function Layout() {
@@ -23,9 +23,16 @@ function Layout() {
       {!isAdminRoute && <Navbar />}
       <main className="flex-1">
         <Routes>
-          <Route path="/" element={<HomePage newsData={newsData} />} />
-          <Route path="/news/:id" element={<NewsView newsData={newsData} />} />
-          <Route path="/category/:category" element={<CategoryPage newsData={newsData} />} />
+          {/* HomePage - no longer needs newsData prop if it fetches from API */}
+          <Route path="/" element={<HomePage />} />
+          
+          {/* NewsView - no longer needs newsData prop, it fetches by ID from API */}
+          <Route path="/news/:id" element={<NewsView />} />
+          
+          {/* CategoryPage - no longer needs newsData prop, it fetches by category from API */}
+          <Route path="/category/:category" element={<CategoryPage />} />
+          
+          {/* Admin routes */}
           <Route
             path="/admin/*"
             element={
@@ -34,6 +41,7 @@ function Layout() {
               </ProtectedRoute>
             }
           />
+          
           <Route path="/search" element={<SearchPage />} />
           <Route path="/login" element={<Login />} />
         </Routes>
@@ -46,7 +54,6 @@ function Layout() {
 function App() {
   return (
     <BrowserRouter>
-      {/* CategoriesProvider now wraps the entire Layout, making categories available everywhere */}
       <CategoriesProvider>
         <Layout />
       </CategoriesProvider>

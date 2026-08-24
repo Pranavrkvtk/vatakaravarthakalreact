@@ -104,9 +104,7 @@ const NewsView = () => {
               minute: '2-digit',
             })}
           </span>
-          <span className="meta-item">
-            <Eye size={16} /> {news.views || 0} views
-          </span>
+        
         </div>
 
         <h1 className="article-title">{news.title}</h1>
