@@ -354,9 +354,26 @@ const AdDisplay = ({ position, className = '' }) => {
   );
 };
 
-// ─── Trending Section ─────────────────────────────────────────
+// ─── ✅ UPDATED: Trending Section with Images ────────────────
 const TrendingSection = ({ news }) => {
   const [hoveredIndex, setHoveredIndex] = useState(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Auto-rotate trending news every 5 seconds
+  useEffect(() => {
+    if (news.length > 0) {
+      const interval = setInterval(() => {
+        setCurrentIndex((prev) => (prev + 1) % Math.min(news.length, 5));
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [news.length]);
+
+  const trendingNews = news.slice(0, 5);
+
+  if (trendingNews.length === 0) return null;
+
+  const currentItem = trendingNews[currentIndex];
 
   return (
     <div className="trending-section">
@@ -368,20 +385,62 @@ const TrendingSection = ({ news }) => {
         </div>
         <div className="trending-pulse" />
       </div>
+
+      {/* ✅ Featured Trending Item with Image */}
+      <div className="trending-featured">
+        <Link to={`/news/${currentItem.id || currentItem._id}`} className="trending-featured-link">
+          <div className="trending-featured-image">
+            <OptimizedImage
+              src={currentItem}
+              alt={currentItem.title}
+              className="trending-featured-img"
+              priority={false}
+            />
+            <div className="trending-featured-overlay">
+              <span className="trending-rank-badge">#{currentIndex + 1}</span>
+            </div>
+          </div>
+          <div className="trending-featured-content">
+            <h4 className="trending-featured-title">{currentItem.title}</h4>
+            <div className="trending-featured-meta">
+              <DateLine date={currentItem.publishedDate || currentItem.publishedAt || currentItem.createdAt} />
+              {currentItem.views > 0 && (
+                <span className="trending-views">
+                  <Eye size={14} /> {currentItem.views}
+                </span>
+              )}
+            </div>
+          </div>
+        </Link>
+      </div>
+
+      {/* ✅ Trending List with Small Images */}
       <div className="trending-list">
-        {news.slice(0, 5).map((item, index) => {
+        {trendingNews.map((item, index) => {
           const itemId = item.id || item._id;
           const colors = ['#FF6B6B', '#FFB347', '#4ECDC4', '#45B7D1', '#6C63FF'];
+          const isActive = index === currentIndex;
+          
           return (
             <Link
               key={itemId}
               to={`/news/${itemId}`}
-              className={`trending-item ${hoveredIndex === index ? 'hovered' : ''}`}
+              className={`trending-item ${hoveredIndex === index ? 'hovered' : ''} ${isActive ? 'active' : ''}`}
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
             >
-              <div className="trending-number" style={{ background: colors[index] }}>
-                {index + 1}
+              <div className="trending-item-image-wrapper">
+                <img
+                  src={getImageUrl(item)}
+                  alt={item.title}
+                  className="trending-item-img"
+                  onError={(e) => {
+                    e.target.src = FALLBACK_IMG;
+                  }}
+                />
+                <div className="trending-number" style={{ background: colors[index] }}>
+                  {index + 1}
+                </div>
               </div>
               <div className="trending-content">
                 <p className="trending-title">{item.title}</p>
@@ -405,6 +464,17 @@ const TrendingSection = ({ news }) => {
             </Link>
           );
         })}
+      </div>
+
+      {/* Dots indicator */}
+      <div className="trending-dots">
+        {trendingNews.map((_, index) => (
+          <span
+            key={index}
+            className={`trending-dot ${index === currentIndex ? 'active' : ''}`}
+            onClick={() => setCurrentIndex(index)}
+          />
+        ))}
       </div>
     </div>
   );
@@ -619,6 +689,7 @@ const CategoryPage = () => {
 
           {/* Sidebar - with Real Ads */}
           <aside className="category-sidebar">
+            {/* ✅ Trending Section with Images */}
             <TrendingSection news={news} />
 
             {/* ✅ Real Ad Display */}

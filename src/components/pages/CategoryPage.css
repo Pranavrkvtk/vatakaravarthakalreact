@@ -452,7 +452,10 @@
   top: 24px;
 }
 
-/* ─── Trending Section ──────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════ */
+/* ─── TRENDING SECTION WITH IMAGES ──────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════ */
+
 .trending-section {
   background: white;
   border-radius: 20px;
@@ -465,8 +468,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
   border-bottom: 2px solid #f1f5f9;
 }
 
@@ -519,6 +522,96 @@
   50% { opacity: 0.5; transform: scale(0.8); }
 }
 
+/* ─── Trending Featured (Large Image) ───────────────────────── */
+.trending-featured {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.trending-featured:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.trending-featured-link {
+  text-decoration: none;
+  display: block;
+  color: inherit;
+}
+
+.trending-featured-image {
+  position: relative;
+  aspect-ratio: 16/9;
+  overflow: hidden;
+  background: #f1f5f9;
+}
+
+.trending-featured-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.trending-featured:hover .trending-featured-img {
+  transform: scale(1.03);
+}
+
+.trending-featured-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, transparent 60%);
+  padding: 12px;
+}
+
+.trending-rank-badge {
+  display: inline-block;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.trending-featured-content {
+  padding: 12px 14px;
+}
+
+.trending-featured-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.trending-featured:hover .trending-featured-title {
+  color: #6C63FF;
+}
+
+.trending-featured-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+/* ─── Trending List Items with Images ────────────────────────── */
 .trending-list {
   display: flex;
   flex-direction: column;
@@ -528,9 +621,9 @@
 .trending-item {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 12px 14px;
-  border-radius: 12px;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 10px;
   text-decoration: none;
   color: inherit;
   transition: all 0.3s ease;
@@ -541,22 +634,51 @@
   background: #f8fafc;
 }
 
+.trending-item.active {
+  background: #f0f0ff;
+  border: 1px solid #6C63FF40;
+}
+
 .trending-item:hover .trending-title {
   color: #6C63FF;
 }
 
-.trending-number {
+.trending-item-image-wrapper {
+  position: relative;
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f1f5f9;
+}
+
+.trending-item-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.trending-item:hover .trending-item-img {
+  transform: scale(1.05);
+}
+
+.trending-number {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 700;
   color: white;
   font-family: 'Inter', system-ui, sans-serif;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .trending-content {
@@ -565,10 +687,10 @@
 }
 
 .trending-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: #0f172a;
-  margin: 0 0 4px 0;
+  margin: 0 0 3px 0;
   line-height: 1.3;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -580,7 +702,7 @@
 .trending-meta {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   font-size: 11px;
   color: #94a3b8;
 }
@@ -588,13 +710,13 @@
 .trending-date {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
 }
 
 .trending-views {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
 }
 
 .trending-arrow {
@@ -604,13 +726,48 @@
   transition: all 0.3s ease;
 }
 
-.trending-item.hovered .trending-arrow {
+.trending-item.hovered .trending-arrow,
+.trending-item.active .trending-arrow {
   opacity: 1;
   color: #6C63FF;
   transform: translateX(4px);
 }
 
+/* ─── Trending Dots ────────────────────────────────────────────── */
+.trending-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 0 2px;
+}
+
+.trending-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  padding: 0;
+  display: inline-block;
+}
+
+.trending-dot.active {
+  background: #6C63FF;
+  width: 20px;
+  border-radius: 4px;
+}
+
+.trending-dot:hover {
+  background: #6C63FF;
+  transform: scale(1.1);
+}
+
+/* ═══════════════════════════════════════════════════════════════ */
 /* ─── REAL AD STYLES ──────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════ */
+
 .real-ad-container {
   width: 100%;
   margin: 4px 0;
@@ -1079,10 +1236,6 @@
     align-self: flex-start;
   }
 
-  .trending-item {
-    padding: 10px 12px;
-  }
-
   .newsletter-form {
     flex-direction: column;
   }
@@ -1098,6 +1251,26 @@
 
   .real-ad-image {
     max-height: 180px;
+  }
+
+  /* Trending responsive */
+  .trending-featured-title {
+    font-size: 0.85rem;
+  }
+
+  .trending-item-image-wrapper {
+    width: 50px;
+    height: 50px;
+  }
+
+  .trending-title {
+    font-size: 12px;
+  }
+
+  .trending-number {
+    width: 18px;
+    height: 18px;
+    font-size: 8px;
   }
 }
 
@@ -1120,5 +1293,27 @@
 
   .real-ad-image {
     max-height: 150px;
+  }
+
+  /* Trending mobile */
+  .trending-item-image-wrapper {
+    width: 44px;
+    height: 44px;
+  }
+
+  .trending-title {
+    font-size: 11px;
+  }
+
+  .trending-featured-title {
+    font-size: 0.8rem;
+  }
+
+  .trending-number {
+    width: 16px;
+    height: 16px;
+    font-size: 7px;
+    top: -4px;
+    right: -4px;
   }
 }
