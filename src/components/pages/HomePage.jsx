@@ -1,3 +1,4 @@
+// src/components/pages/HomePage.jsx
 import React, { useEffect, useState } from 'react';
 import { getAllNews } from '../../api/news';
 import { Rss, Search, ChevronLeft, ChevronRight, Clock, Zap, Menu, ArrowRight } from 'lucide-react';
@@ -13,6 +14,11 @@ export const CATEGORY_COLORS = {
   'ചരമം': '#d97706',
   'കായികം': '#059669',
   'യാത്ര': '#0284c7',
+  'ദേശീയം': '#7c3aed',
+  'വിദേശം': '#0d9488',
+  'മലബാർ': '#b45309',
+  'കല': '#db2777',
+  'പരമം': '#4f46e5',
 };
 
 // ----------------------------------------------------------------
@@ -35,6 +41,9 @@ const DateLine = ({ date, className = '' }) => (
   </span>
 );
 
+// ================================================================
+// ✅ FIXED: Sidebar Component - Single Link wraps entire item
+// ================================================================
 const Sidebar = ({ newsData }) => {
   const [tab, setTab] = useState('latest');
 
@@ -67,26 +76,32 @@ const Sidebar = ({ newsData }) => {
         </button>
       </div>
 
+      {/* ✅ FIXED: Featured - Single Link wraps img + overlay */}
       {tab === 'latest' && list.length > 0 && (
         <div className="sidebar-featured">
-          <div className="img-wrap">
+          <Link 
+            to={`/news/${list[0].id}`} 
+            className="img-wrap" 
+            style={{ display: 'block' }}
+          >
             <img src={list[0].image || '/placeholder-image.jpg'} alt="" />
             <div className="overlay"><p>{list[0].title}</p></div>
-          </div>
+          </Link>
           <DateLine date={formatDate(list[0])} className="mt-2" />
         </div>
       )}
 
+      {/* ✅ FIXED: News List - Single Link per item */}
       <ul className="sidebar-news-list">
         {list.slice(1).map((n) => (
           <li key={n.id}>
-            <img src={n.image || '/placeholder-image.jpg'} alt="" />
-            <div className="info">
-              <Link to={`/news/${n.id}`}>
+            <Link to={`/news/${n.id}`} style={{ display: 'flex', gap: '10px', textDecoration: 'none', flex: 1 }}>
+              <img src={n.image || '/placeholder-image.jpg'} alt="" />
+              <div className="info">
                 <p>{n.title}</p>
-              </Link>
-              <DateLine date={formatDate(n)} />
-            </div>
+                <DateLine date={formatDate(n)} />
+              </div>
+            </Link>
           </li>
         ))}
       </ul>
@@ -135,7 +150,9 @@ const BreakingTicker = ({ newsData }) => {
   return (
     <div className="ticker">
       <span className="badge"><Zap size={12} /> TRENDING</span>
-      <p className="text">{item.title}</p>
+      <Link to={`/news/${item.id}`} className="ticker-link">
+        <p className="text">{item.title}</p>
+      </Link>
       <span className="date">{formatDate(item)}</span>
       <div className="controls">
         <button onClick={() => go(-1)}><ChevronLeft size={15} /></button>
@@ -145,10 +162,17 @@ const BreakingTicker = ({ newsData }) => {
   );
 };
 
+// ================================================================
+// ✅ FIXED: FeaturedNews - Single Link wraps entire component
+// ================================================================
 const FeaturedNews = ({ news }) => {
   if (!news) return null;
   return (
-    <div className="featured-news">
+    <Link 
+      to={`/news/${news.id}`} 
+      className="featured-news" 
+      style={{ display: 'block', textDecoration: 'none' }}
+    >
       <img src={news.image || '/placeholder-image.jpg'} alt="" />
       <span
         className="category-tag"
@@ -157,33 +181,38 @@ const FeaturedNews = ({ news }) => {
         {news.category || 'Uncategorized'}
       </span>
       <div className="overlay">
-        <Link to={`/news/${news.id}`}>
-          <h2>{news.title}</h2>
-        </Link>
+        <h2>{news.title}</h2>
         <DateLine date={formatDate(news)} className="text-white/70" />
       </div>
-    </div>
+    </Link>
   );
 };
 
+// ================================================================
+// ✅ FIXED: NewsCard - Single Link for image + category tag
+// ================================================================
 const NewsCard = ({ news }) => (
   <div className="news-card">
     <div className="img-wrap">
-      <img src={news.image || '/placeholder-image.jpg'} alt="" />
-      <span
-        className="category-tag"
-        style={{ backgroundColor: CATEGORY_COLORS[news.category] || '#4338ca' }}
-      >
-        {news.category || 'Uncategorized'}
-      </span>
+      <Link to={`/news/${news.id}`} style={{ display: 'block' }}>
+        <img src={news.image || '/placeholder-image.jpg'} alt="" />
+        <span
+          className="category-tag"
+          style={{ backgroundColor: CATEGORY_COLORS[news.category] || '#4338ca' }}
+        >
+          {news.category || 'Uncategorized'}
+        </span>
+      </Link>
     </div>
     <div className="body">
-      <Link to={`/news/${news.id}`}>
+      <Link to={`/news/${news.id}`} style={{ textDecoration: 'none' }}>
         <h3>{news.title}</h3>
       </Link>
       <div className="footer">
         <DateLine date={formatDate(news)} />
-        <span className="read-more">Read <ArrowRight size={14} /></span>
+        <Link to={`/news/${news.id}`} className="read-more">
+          Read <ArrowRight size={14} />
+        </Link>
       </div>
     </div>
   </div>
@@ -225,15 +254,37 @@ const HomePage = () => {
   }, []);
 
   if (loading) {
-    return <div className="app-container"><p>Loading news...</p></div>;
+    return (
+      <div className="app-container">
+        <main className="main-layout">
+          <div style={{ padding: '40px', textAlign: 'center', width: '100%' }}>
+            Loading news...
+          </div>
+        </main>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="app-container"><p className="error">{error}</p></div>;
+    return (
+      <div className="app-container">
+        <main className="main-layout">
+          <div className="error">{error}</div>
+        </main>
+      </div>
+    );
   }
 
   if (!newsData || newsData.length === 0) {
-    return <div className="app-container"><p>No news available</p></div>;
+    return (
+      <div className="app-container">
+        <main className="main-layout">
+          <div style={{ padding: '40px', textAlign: 'center', width: '100%' }}>
+            No news available
+          </div>
+        </main>
+      </div>
+    );
   }
 
   return (
