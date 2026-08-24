@@ -1,7 +1,7 @@
 // src/components/pages/CategoryPage.jsx
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getNewsByCategory } from '../../api/news';
+import { getNewsByCategory, getAdsByPosition, recordAdView, recordAdClick } from '../../api/news';
 import { CATEGORY_COLORS } from './HomePage';
 import { 
   Clock, ArrowRight, AlertCircle, RefreshCw, Zap, Eye, 
@@ -182,6 +182,178 @@ const CategoryPill = ({ label, className = '' }) => {
   );
 };
 
+// ─── Ad Display Component ────────────────────────────────────
+const AdDisplay = ({ position, className = '' }) => {
+  const [ads, setAds] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const loadAds = async () => {
+      try {
+        console.log(`📢 Fetching ads for position: ${position}`);
+        const data = await getAdsByPosition(position);
+        console.log(`📢 Ads response for ${position}:`, data);
+        
+        if (data && data.length > 0) {
+          setAds(data);
+          if (data[0].id) {
+            recordAdView(data[0].id);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading ads:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadAds();
+  }, [position]);
+
+  useEffect(() => {
+    if (ads.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentIndex((prev) => {
+          const newIndex = (prev + 1) % ads.length;
+          if (ads[newIndex]?.id) {
+            recordAdView(ads[newIndex].id);
+          }
+          return newIndex;
+        });
+      }, 8000);
+      return () => clearInterval(interval);
+    }
+  }, [ads]);
+
+  if (loading) {
+    return (
+      <div className="real-ad-container">
+        <div className="ad-label">— ADVERTISEMENT —</div>
+        <div className="ad-loading" style={{ 
+          height: '250px', 
+          background: '#f1f5f9', 
+          borderRadius: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#94a3b8',
+          fontSize: '14px'
+        }}>
+          Loading ad...
+        </div>
+      </div>
+    );
+  }
+
+  if (ads.length === 0) {
+    return (
+      <div className="ad-card">
+        <div className="ad-header">
+          <span className="ad-label">— Sponsored —</span>
+        </div>
+        <div className="ad-content">
+          <div className="ad-placeholder">
+            <span className="ad-icon">📢</span>
+            <p>Advertise Here</p>
+            <span className="ad-size">300 × 250</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const ad = ads[currentIndex];
+
+  const handleAdClick = (e) => {
+    if (ad.id) {
+      recordAdClick(ad.id);
+    }
+    if (!ad.linkUrl) {
+      e.preventDefault();
+    }
+  };
+
+  return (
+    <div className={`real-ad-container ${className}`}>
+      <div className="ad-label">— ADVERTISEMENT —</div>
+      <a
+        href={ad.linkUrl || '#'}
+        target={ad.linkUrl ? '_blank' : '_self'}
+        rel="noopener noreferrer"
+        onClick={handleAdClick}
+        className="real-ad-link"
+        style={{
+          backgroundColor: ad.backgroundColor || '#ffffff',
+          border: `1px solid ${ad.borderColor || '#e2e8f0'}`,
+          borderRadius: '12px',
+          overflow: 'hidden',
+          display: 'block',
+          transition: 'all 0.3s ease',
+          textDecoration: 'none',
+        }}
+      >
+        {ad.imageUrl ? (
+          <img
+            src={ad.imageUrl}
+            alt={ad.altText || ad.title || 'Advertisement'}
+            className="real-ad-image"
+            style={{
+              width: '100%',
+              height: 'auto',
+              display: 'block',
+              objectFit: 'contain',
+              maxHeight: '250px',
+            }}
+            onError={(e) => {
+              console.error('❌ Ad image failed to load:', ad.imageUrl);
+              e.target.style.display = 'none';
+              const parent = e.target.parentElement;
+              if (parent) {
+                parent.innerHTML = `
+                  <div style="padding:20px;text-align:center;">
+                    <h4 style="margin:0;color:#0f172a;font-size:16px;">${ad.title || 'Advertisement'}</h4>
+                    ${ad.description ? `<p style="margin:8px 0 0;color:#64748b;font-size:14px;">${ad.description}</p>` : ''}
+                  </div>
+                `;
+              }
+            }}
+          />
+        ) : (
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+            <h4 style={{ margin: 0, color: '#0f172a', fontSize: '16px' }}>{ad.title || 'Advertisement'}</h4>
+            {ad.description && (
+              <p style={{ margin: '8px 0 0', color: '#64748b', fontSize: '14px' }}>{ad.description}</p>
+            )}
+          </div>
+        )}
+        {ads.length > 1 && (
+          <div className="ad-dots" style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            gap: '6px', 
+            padding: '8px 0',
+            background: '#f8fafc'
+          }}>
+            {ads.map((_, idx) => (
+              <span
+                key={idx}
+                style={{
+                  width: idx === currentIndex ? '16px' : '8px',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: idx === currentIndex ? '#6C63FF' : '#e2e8f0',
+                  transition: 'all 0.3s ease',
+                  display: 'inline-block',
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </a>
+    </div>
+  );
+};
+
 // ─── Trending Section ─────────────────────────────────────────
 const TrendingSection = ({ news }) => {
   const [hoveredIndex, setHoveredIndex] = useState(null);
@@ -339,12 +511,10 @@ const CategoryPage = () => {
       </div>
 
       <div className="category-container">
-        {/* ✅ Category Header - Clean, no badge, no stories count */}
+        {/* Category Header */}
         <div className="category-header">
           <div className="header-content">
             <div className="header-left">
-              {/* ✅ REMOVED: Category badge */}
-              {/* ✅ REMOVED: stories count */}
               <h1 className="category-title">
                 {decodedCategory}
               </h1>
@@ -447,23 +617,14 @@ const CategoryPage = () => {
             </div>
           </div>
 
-          {/* Sidebar */}
+          {/* Sidebar - with Real Ads */}
           <aside className="category-sidebar">
             <TrendingSection news={news} />
 
-            <div className="ad-card">
-              <div className="ad-header">
-                <span className="ad-label">— Sponsored —</span>
-              </div>
-              <div className="ad-content">
-                <div className="ad-placeholder">
-                  <span className="ad-icon">📢</span>
-                  <p>Advertise Here</p>
-                  <span className="ad-size">300 × 250</span>
-                </div>
-              </div>
-            </div>
+            {/* ✅ Real Ad Display */}
+            <AdDisplay position="sidebar" />
 
+            {/* Newsletter Card */}
             <div className="newsletter-card">
               <div className="newsletter-icon">📬</div>
               <h4>Get the latest news</h4>
