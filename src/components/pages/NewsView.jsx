@@ -3,7 +3,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getNewsById } from '../../api/news';
 import { getImageSrc } from '../../utils/imageUtils';
-import { ArrowLeft, Calendar, Clock, Image as ImageIcon, AlertCircle, Shield } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Image as ImageIcon } from 'lucide-react';
 import './NewsView.css';
 
 const NewsView = () => {
@@ -12,11 +12,8 @@ const NewsView = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
-  const [showProtectionAlert, setShowProtectionAlert] = useState(false);
-  const [alertMessage, setAlertMessage] = useState('Content is protected');
   const articleRef = useRef(null);
   const imageRef = useRef(null);
-  const alertTimeoutRef = useRef(null);
 
   useEffect(() => {
     getNewsById(id)
@@ -38,41 +35,19 @@ const NewsView = () => {
         setError('Article not found.');
         setLoading(false);
       });
-
-    // Cleanup timeout on unmount
-    return () => {
-      if (alertTimeoutRef.current) {
-        clearTimeout(alertTimeoutRef.current);
-      }
-    };
   }, [id]);
 
   // ============================================================
-  // PROTECTION: Show alert with custom message
-  // ============================================================
-  const showProtectionAlertWithMessage = (message) => {
-    setAlertMessage(message);
-    setShowProtectionAlert(true);
-    if (alertTimeoutRef.current) {
-      clearTimeout(alertTimeoutRef.current);
-    }
-    alertTimeoutRef.current = setTimeout(() => {
-      setShowProtectionAlert(false);
-    }, 2500);
-  };
-
-  // ============================================================
-  // PROTECTION: Disable right-click on entire article
+  // PROTECTION: Disable right-click on entire article (silent)
   // ============================================================
   const handleContextMenu = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    showProtectionAlertWithMessage('⛔ Right-click is disabled');
     return false;
   };
 
   // ============================================================
-  // PROTECTION: Disable keyboard shortcuts
+  // PROTECTION: Disable keyboard shortcuts (silent)
   // ============================================================
   const handleKeyDown = (e) => {
     // Prevent Ctrl+C, Ctrl+S, Ctrl+P, Ctrl+U, Ctrl+Shift+I, F12
@@ -82,7 +57,6 @@ const NewsView = () => {
     ) {
       e.preventDefault();
       e.stopPropagation();
-      showProtectionAlertWithMessage('⛔ Keyboard shortcuts are disabled');
       return false;
     }
     
@@ -90,7 +64,6 @@ const NewsView = () => {
     if (e.key === 'F12') {
       e.preventDefault();
       e.stopPropagation();
-      showProtectionAlertWithMessage('⛔ Developer tools are disabled');
       return false;
     }
 
@@ -98,7 +71,6 @@ const NewsView = () => {
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'i' || e.key === 'I')) {
       e.preventDefault();
       e.stopPropagation();
-      showProtectionAlertWithMessage('⛔ Developer tools are disabled');
       return false;
     }
 
@@ -106,7 +78,6 @@ const NewsView = () => {
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'j' || e.key === 'J')) {
       e.preventDefault();
       e.stopPropagation();
-      showProtectionAlertWithMessage('⛔ Developer tools are disabled');
       return false;
     }
 
@@ -114,13 +85,12 @@ const NewsView = () => {
     if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
       e.preventDefault();
       e.stopPropagation();
-      showProtectionAlertWithMessage('⛔ View source is disabled');
       return false;
     }
   };
 
   // ============================================================
-  // PROTECTION: Disable text selection
+  // PROTECTION: Disable text selection (silent)
   // ============================================================
   const handleSelectStart = (e) => {
     // Allow selection on share buttons and back link
@@ -132,7 +102,7 @@ const NewsView = () => {
   };
 
   // ============================================================
-  // PROTECTION: Disable copy
+  // PROTECTION: Disable copy (silent)
   // ============================================================
   const handleCopy = (e) => {
     // Allow copy on share buttons and back link
@@ -141,42 +111,38 @@ const NewsView = () => {
     }
     e.preventDefault();
     e.stopPropagation();
-    showProtectionAlertWithMessage('⛔ Copying content is disabled');
     return false;
   };
 
   // ============================================================
-  // PROTECTION: Disable cut
+  // PROTECTION: Disable cut (silent)
   // ============================================================
   const handleCut = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    showProtectionAlertWithMessage('⛔ Cutting content is disabled');
     return false;
   };
 
   // ============================================================
-  // PROTECTION: Disable paste
+  // PROTECTION: Disable paste (silent)
   // ============================================================
   const handlePaste = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    showProtectionAlertWithMessage('⛔ Pasting is disabled');
     return false;
   };
 
   // ============================================================
-  // PROTECTION: Disable drag
+  // PROTECTION: Disable drag (silent)
   // ============================================================
   const handleDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    showProtectionAlertWithMessage('⛔ Dragging is disabled');
     return false;
   };
 
   // ============================================================
-  // PROTECTION: Disable drop
+  // PROTECTION: Disable drop (silent)
   // ============================================================
   const handleDrop = (e) => {
     e.preventDefault();
@@ -185,19 +151,17 @@ const NewsView = () => {
   };
 
   // ============================================================
-  // PROTECTION: Disable image interactions
+  // PROTECTION: Disable image interactions (silent)
   // ============================================================
   const handleImageContextMenu = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    showProtectionAlertWithMessage('⛔ Image right-click is disabled');
     return false;
   };
 
   const handleImageDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    showProtectionAlertWithMessage('⛔ Image dragging is disabled');
     return false;
   };
 
@@ -206,7 +170,7 @@ const NewsView = () => {
   };
 
   // ============================================================
-  // PROTECTION: Disable touch events on mobile (long press)
+  // PROTECTION: Disable touch events on mobile (silent)
   // ============================================================
   const handleTouchStart = (e) => {
     const target = e.target;
@@ -218,17 +182,14 @@ const NewsView = () => {
     // Block long press on images and text
     if (target.tagName === 'IMG' || target.closest('.protected-content')) {
       // Only block if it's a long press (touch > 500ms)
-      // We'll use touchstart to set a timer
       const touchStartTime = Date.now();
       const timer = setTimeout(() => {
         const touchEndTime = Date.now();
         if (touchEndTime - touchStartTime > 500) {
           e.preventDefault();
-          showProtectionAlertWithMessage('⛔ Long press is disabled');
         }
       }, 500);
       
-      // Store timer on element to clear it on touchend
       target._touchTimer = timer;
     }
   };
@@ -250,23 +211,11 @@ const NewsView = () => {
   };
 
   // ============================================================
-  // PROTECTION: Disable native screenshot on mobile (prevent default)
-  // ============================================================
-  const handleKeyUp = (e) => {
-    // Block volume down + power button combination (Android screenshot)
-    // This is limited but helps
-    if (e.key === 'VolumeDown' || e.key === 'Power') {
-      e.preventDefault();
-    }
-  };
-
-  // ============================================================
-  // PROTECTION: Disable double click selection
+  // PROTECTION: Disable double click selection (silent)
   // ============================================================
   const handleDoubleClick = (e) => {
     if (!e.target.closest('.share-btn') && !e.target.closest('.back-link')) {
       e.preventDefault();
-      showProtectionAlertWithMessage('⛔ Double-click selection is disabled');
       return false;
     }
   };
@@ -306,7 +255,6 @@ const NewsView = () => {
       ref={articleRef}
       onContextMenu={handleContextMenu}
       onKeyDown={handleKeyDown}
-      onKeyUp={handleKeyUp}
       onSelectStart={handleSelectStart}
       onCopy={handleCopy}
       onCut={handleCut}
@@ -329,20 +277,6 @@ const NewsView = () => {
         touchAction: 'manipulation',
       }}
     >
-      {/* Protection Alert */}
-      {showProtectionAlert && (
-        <div className="protection-alert">
-          <Shield size={18} />
-          <span>{alertMessage}</span>
-        </div>
-      )}
-
-      {/* Protection Badge (Watermark) */}
-      <div className="protection-watermark">
-        <Shield size={12} />
-        <span>Protected Content</span>
-      </div>
-
       <Link to="/" className="back-link">
         <ArrowLeft size={18} /> Back to Home
       </Link>
