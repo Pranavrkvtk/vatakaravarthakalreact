@@ -1,7 +1,7 @@
 // src/components/pages/HomePage.jsx
 import React, { useEffect, useState } from 'react';
 import { getAllNews, getAdsByPosition, recordAdView, recordAdClick } from '../../api/news';
-import { Rss, Search, ChevronLeft, ChevronRight, Clock, Zap, Menu, ArrowRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, Zap, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import './HomePage.css';
 
@@ -29,6 +29,19 @@ const formatDate = (news) => {
   if (!raw) return 'Just now';
   const d = new Date(raw);
   return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
+// ----------------------------------------------------------------
+// Helper: safe image src with placeholder fallback
+// ----------------------------------------------------------------
+const safeImage = (image) => {
+  return image || '/placeholder-image.jpg';
+};
+
+const handleImgError = (e) => {
+  console.error('Image failed to load:', e.target.src);
+  e.target.onerror = null;
+  e.target.src = '/placeholder-image.jpg';
 };
 
 // ----------------------------------------------------------------
@@ -81,7 +94,7 @@ const AdDisplay = ({ position, className = '' }) => {
 
   if (loading) {
     return (
-      <div className="real-ad-container">
+      <div className={`real-ad-container ${className}`}>
         <div className="ad-label">— ADVERTISEMENT —</div>
         <div className="ad-loading" style={{ 
           height: position === 'sidebar' ? '200px' : '90px', 
@@ -136,7 +149,7 @@ const AdDisplay = ({ position, className = '' }) => {
       >
         {ad.imageUrl ? (
           <img
-            src={ad.imageUrl}
+            src={safeImage(ad.imageUrl)}
             alt={ad.altText || ad.title || 'Advertisement'}
             className="real-ad-image"
             style={{
@@ -207,7 +220,7 @@ const DateLine = ({ date, className = '' }) => (
 );
 
 // ================================================================
-// ✅ UPDATED: Sidebar Component with Auto-Rotating Trending
+// Sidebar Component with Auto-Rotating Trending
 // ================================================================
 const Sidebar = ({ newsData }) => {
   const [tab, setTab] = useState('latest');
@@ -223,7 +236,7 @@ const Sidebar = ({ newsData }) => {
 
   const list = getItems(tab);
 
-  // ✅ Auto-rotate trending news every 5 seconds
+  // Auto-rotate trending news every 5 seconds
   useEffect(() => {
     if (tab === 'trending' && list.length > 0) {
       const interval = setInterval(() => {
@@ -266,14 +279,18 @@ const Sidebar = ({ newsData }) => {
             className="img-wrap" 
             style={{ display: 'block' }}
           >
-            <img src={list[0].image || '/placeholder-image.jpg'} alt="" />
+            <img 
+              src={safeImage(list[0].image)} 
+              alt={list[0].title || 'News'} 
+              onError={handleImgError}
+            />
             <div className="overlay"><p>{list[0].title}</p></div>
           </Link>
           <DateLine date={formatDate(list[0])} className="mt-2" />
         </div>
       )}
 
-      {/* ✅ TRENDING TAB with Auto-Rotation */}
+      {/* TRENDING TAB with Auto-Rotation */}
       {tab === 'trending' && list.length > 0 && (
         <div className="sidebar-trending">
           <div className="trending-slider">
@@ -281,9 +298,10 @@ const Sidebar = ({ newsData }) => {
               <div className="trending-item-card">
                 <div className="trending-item-image">
                   <img 
-                    src={currentTrendingItem.image || '/placeholder-image.jpg'} 
-                    alt={currentTrendingItem.title}
+                    src={safeImage(currentTrendingItem.image)} 
+                    alt={currentTrendingItem.title || 'News'}
                     className="trending-img"
+                    onError={handleImgError}
                   />
                   <div className="trending-number-badge">{trendingIndex + 1}</div>
                 </div>
@@ -313,7 +331,11 @@ const Sidebar = ({ newsData }) => {
           {list.slice(1).map((n) => (
             <li key={n.id}>
               <Link to={`/news/${n.id}`} style={{ display: 'flex', gap: '10px', textDecoration: 'none', flex: 1 }}>
-                <img src={n.image || '/placeholder-image.jpg'} alt="" />
+                <img 
+                  src={safeImage(n.image)} 
+                  alt={n.title || 'News'} 
+                  onError={handleImgError}
+                />
                 <div className="info">
                   <p>{n.title}</p>
                   <DateLine date={formatDate(n)} />
@@ -324,7 +346,7 @@ const Sidebar = ({ newsData }) => {
         </ul>
       )}
 
-      {/* ✅ Sidebar Ad */}
+      {/* Sidebar Ad */}
       <div className="sidebar-ad">
         <AdDisplay position="sidebar" />
       </div>
@@ -333,7 +355,7 @@ const Sidebar = ({ newsData }) => {
 };
 
 // ================================================================
-// ✅ UPDATED: Breaking Ticker with Auto-Rotation
+// Breaking Ticker with Auto-Rotation
 // ================================================================
 const BreakingTicker = ({ newsData }) => {
   const [index, setIndex] = useState(0);
@@ -405,39 +427,17 @@ const FooterAd = () => {
 };
 
 // ================================================================
-// FeaturedNews
-// ================================================================
-const FeaturedNews = ({ news }) => {
-  if (!news) return null;
-  return (
-    <Link 
-      to={`/news/${news.id}`} 
-      className="featured-news" 
-      style={{ display: 'block', textDecoration: 'none' }}
-    >
-      <img src={news.image || '/placeholder-image.jpg'} alt="" />
-      <span
-        className="category-tag"
-        style={{ backgroundColor: CATEGORY_COLORS[news.category] || '#4338ca' }}
-      >
-        {news.category || 'Uncategorized'}
-      </span>
-      <div className="overlay">
-        <h2>{news.title}</h2>
-        <DateLine date={formatDate(news)} className="text-white/70" />
-      </div>
-    </Link>
-  );
-};
-
-// ================================================================
-// NewsCard
+// NewsCard - Individual news card (all equal size)
 // ================================================================
 const NewsCard = ({ news }) => (
   <div className="news-card">
     <div className="img-wrap">
       <Link to={`/news/${news.id}`} style={{ display: 'block' }}>
-        <img src={news.image || '/placeholder-image.jpg'} alt="" />
+        <img 
+          src={safeImage(news.image)} 
+          alt={news.title || 'News'} 
+          onError={handleImgError}
+        />
         <span
           className="category-tag"
           style={{ backgroundColor: CATEGORY_COLORS[news.category] || '#4338ca' }}
@@ -460,14 +460,15 @@ const NewsCard = ({ news }) => (
   </div>
 );
 
+// ================================================================
+// NewsGrid - All cards equal size, no featured/span-2
+// ================================================================
 const NewsGrid = ({ newsData }) => {
   if (!newsData || newsData.length === 0) return null;
-  const featured = newsData[0];
-  const rest = newsData.slice(1);
+  
   return (
     <div className="news-grid">
-      <div className="span-2"><FeaturedNews news={featured} /></div>
-      {rest.map((n) => (
+      {newsData.map((n) => (
         <NewsCard key={n.id} news={n} />
       ))}
     </div>

@@ -354,7 +354,7 @@ const AdDisplay = ({ position, className = '' }) => {
   );
 };
 
-// ─── ✅ UPDATED: Trending Section with Images ────────────────
+// ─── ✅ UPDATED: Trending Section with Images (No View Count) ──
 const TrendingSection = ({ news }) => {
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -404,17 +404,13 @@ const TrendingSection = ({ news }) => {
             <h4 className="trending-featured-title">{currentItem.title}</h4>
             <div className="trending-featured-meta">
               <DateLine date={currentItem.publishedDate || currentItem.publishedAt || currentItem.createdAt} />
-              {currentItem.views > 0 && (
-                <span className="trending-views">
-                  <Eye size={14} /> {currentItem.views}
-                </span>
-              )}
+              {/* ✅ REMOVED: View count */}
             </div>
           </div>
         </Link>
       </div>
 
-      {/* ✅ Trending List with Small Images */}
+      {/* ✅ Trending List with Small Images - No View Count */}
       <div className="trending-list">
         {trendingNews.map((item, index) => {
           const itemId = item.id || item._id;
@@ -453,11 +449,7 @@ const TrendingSection = ({ news }) => {
                       }) : 'Recent'
                     }
                   </span>
-                  {item.views > 0 && (
-                    <span className="trending-views">
-                      <Eye size={12} /> {item.views}
-                    </span>
-                  )}
+                  {/* ✅ REMOVED: View count */}
                 </div>
               </div>
               <ChevronRight className="trending-arrow" size={16} />
@@ -689,7 +681,7 @@ const CategoryPage = () => {
 
           {/* Sidebar - with Real Ads */}
           <aside className="category-sidebar">
-            {/* ✅ Trending Section with Images */}
+            {/* ✅ Trending Section with Images (No View Count) */}
             <TrendingSection news={news} />
 
             {/* ✅ Real Ad Display */}
