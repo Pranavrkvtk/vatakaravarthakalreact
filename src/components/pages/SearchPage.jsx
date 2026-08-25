@@ -1,7 +1,7 @@
 // src/components/pages/SearchPage.jsx
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { searchNews, getSearchSuggestions, searchNewsAdvanced } from '../../api/news';
+import { searchNews, getSearchSuggestions, advancedSearch } from '../../api/news';
 import { Search, X, Clock, ArrowRight, TrendingUp, Calendar } from 'lucide-react';
 import './SearchPage.css';
 
@@ -50,11 +50,17 @@ const SearchPage = () => {
     setHasSearched(true);
 
     try {
-      const data = await searchNewsAdvanced(query.trim(), page, 12, sort);
+      // ✅ Use advancedSearch which is exported
+      const data = await advancedSearch({
+        keyword: query.trim(),
+        page,
+        size: 12,
+        sortBy: sort
+      });
       
       console.log('🔍 Search response:', data);
       
-      // ✅ Handle the response correctly - it's an object with 'news' array
+      // Handle the response correctly - it's an object with 'news' array
       if (data && typeof data === 'object') {
         // Extract news array from response
         const newsData = data.news || [];

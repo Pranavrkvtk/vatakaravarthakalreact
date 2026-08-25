@@ -3,29 +3,15 @@ import React, { useState, useEffect, useRef } from "react";
 import Swal from "sweetalert2";
 import { compressImage } from '../../utils/imageUtils';
 import { uploadContentImage } from '../../api/news';
+import { X, Bold, Italic, Underline, Strikethrough, List, ListOrdered, Quote, Link, Image, Upload, Type, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 
-// ---------- Rich Text Editor with Image Upload ----------
-const rteBtnStyle = {
-  background: "#fff",
-  border: "1px solid var(--border-light)",
-  borderRadius: 6,
-  width: 30,
-  height: 30,
-  cursor: "pointer",
-  fontSize: 13,
-  fontWeight: 700,
-  color: "var(--text-primary)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  transition: "all 0.2s",
-};
-
+// ---------- Modern Rich Text Editor ----------
 function RichTextEditor({ value, onChange }) {
   const editorRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadedImages, setUploadedImages] = useState([]);
+  const [charCount, setCharCount] = useState(0);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -33,12 +19,23 @@ function RichTextEditor({ value, onChange }) {
       const current = editorRef.current.innerHTML;
       if (value !== current) {
         editorRef.current.innerHTML = value || "";
+        updateCharCount();
       }
     }
   }, [value]);
 
+  const updateCharCount = () => {
+    if (editorRef.current) {
+      const text = editorRef.current.textContent || "";
+      setCharCount(text.length);
+    }
+  };
+
   const handleInput = () => {
-    if (editorRef.current) onChange(editorRef.current.innerHTML);
+    if (editorRef.current) {
+      onChange(editorRef.current.innerHTML);
+      updateCharCount();
+    }
   };
 
   const exec = (cmd, arg = null) => {
@@ -52,7 +49,6 @@ function RichTextEditor({ value, onChange }) {
     if (url) exec("createLink", url);
   };
 
-  // ─── Remove Image ──────────────────────────────────────────────
   const removeImage = (imageElement) => {
     if (!imageElement) return;
 
@@ -79,7 +75,6 @@ function RichTextEditor({ value, onChange }) {
     });
   };
 
-  // ─── Upload Image to Server ──────────────────────────────────
   const uploadImage = async (file) => {
     if (!file) return;
 
@@ -102,35 +97,32 @@ function RichTextEditor({ value, onChange }) {
         setUploadProgress(percentCompleted);
       });
 
-      console.log('Upload response:', data);
-
       if (data && data.url) {
         const imageUrl = data.url;
         const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : `http://localhost:8080${imageUrl}`;
         
-        console.log('Full Image URL:', fullImageUrl);
-        
         setUploadedImages(prev => [...prev, fullImageUrl]);
 
-        // ✅ FIXED: Image with proper block display for Enter key support
         const imgHtml = `
           <div class="image-container" style="
             display: block;
             max-width: 100%;
-            margin: 12px 0;
-            border-radius: 8px;
+            margin: 16px 0;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            background: #f1f5f9;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            background: #f8fafc;
             border: 1px solid #e2e8f0;
             position: relative;
             clear: both;
+            transition: box-shadow 0.3s ease;
           ">
             <div style="
               display: flex;
               justify-content: center;
               align-items: center;
-              padding: 4px;
+              padding: 8px;
+              background: #f8fafc;
             ">
               <img 
                 src="${fullImageUrl}" 
@@ -139,56 +131,58 @@ function RichTextEditor({ value, onChange }) {
                   max-width: 100%;
                   width: auto;
                   height: auto;
-                  max-height: 400px;
+                  max-height: 450px;
                   display: block;
                   object-fit: contain;
-                  background: #f1f5f9;
-                  border-radius: 4px;
+                  background: #f8fafc;
+                  border-radius: 8px;
                 "
               />
             </div>
             <div style="
               position: absolute;
-              top: 8px;
-              right: 8px;
+              top: 12px;
+              right: 12px;
               opacity: 0;
-              transition: opacity 0.2s ease;
+              transition: opacity 0.25s ease;
               z-index: 10;
             " class="image-actions">
               <button 
                 style="
-                  background: rgba(220, 38, 38, 0.9);
+                  background: rgba(220, 38, 38, 0.95);
                   color: #fff;
                   border: none;
                   border-radius: 50%;
-                  width: 32px;
-                  height: 32px;
+                  width: 36px;
+                  height: 36px;
                   font-size: 16px;
                   cursor: pointer;
                   display: flex;
                   align-items: center;
                   justify-content: center;
-                  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
                   transition: all 0.2s;
+                  backdrop-filter: blur(4px);
                 "
-                onmouseover="this.style.transform='scale(1.1)'"
-                onmouseout="this.style.transform='scale(1)'"
+                onmouseover="this.style.transform='scale(1.1)'; this.style.background='rgba(220,38,38,1)'"
+                onmouseout="this.style.transform='scale(1)'; this.style.background='rgba(220,38,38,0.95)'"
               >
-                ✕
+                <X size={16} />
               </button>
             </div>
             <div style="
               position: absolute;
-              bottom: 8px;
-              left: 8px;
-              background: rgba(0,0,0,0.4);
+              bottom: 12px;
+              left: 12px;
+              background: rgba(0,0,0,0.5);
               color: #fff;
-              padding: 2px 10px;
-              border-radius: 4px;
-              font-size: 10px;
+              padding: 4px 12px;
+              border-radius: 20px;
+              font-size: 11px;
               font-weight: 500;
-              backdrop-filter: blur(4px);
-            ">📸</div>
+              backdrop-filter: blur(8px);
+              letter-spacing: 0.3px;
+            ">📸 Image</div>
           </div>
           <br />
         `;
@@ -196,7 +190,6 @@ function RichTextEditor({ value, onChange }) {
         document.execCommand('insertHTML', false, imgHtml);
         handleInput();
 
-        // Move cursor after the image
         setTimeout(() => {
           const range = document.createRange();
           const selection = window.getSelection();
@@ -210,7 +203,6 @@ function RichTextEditor({ value, onChange }) {
           editorRef.current?.focus();
         }, 50);
 
-        // Add event listeners for hover
         setTimeout(() => {
           const containers = editorRef.current?.querySelectorAll('.image-container');
           if (containers) {
@@ -226,10 +218,12 @@ function RichTextEditor({ value, onChange }) {
               container.addEventListener('mouseenter', () => {
                 const actions = container.querySelector('.image-actions');
                 if (actions) actions.style.opacity = '1';
+                container.style.boxShadow = '0 8px 32px rgba(0,0,0,0.15)';
               });
               container.addEventListener('mouseleave', () => {
                 const actions = container.querySelector('.image-actions');
                 if (actions) actions.style.opacity = '0';
+                container.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)';
               });
             });
           }
@@ -241,6 +235,8 @@ function RichTextEditor({ value, onChange }) {
           text: 'Image inserted into content',
           timer: 1500,
           showConfirmButton: false,
+          toast: true,
+          position: 'top-end',
         });
       } else {
         Swal.fire('Error', 'No image URL returned from server', 'error');
@@ -295,16 +291,16 @@ function RichTextEditor({ value, onChange }) {
         <div class="image-container" style="
           display: block;
           max-width: 100%;
-          margin: 12px 0;
-          border-radius: 8px;
+          margin: 16px 0;
+          border-radius: 12px;
           overflow: hidden;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-          background: #f1f5f9;
+          box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+          background: #f8fafc;
           border: 1px solid #e2e8f0;
           position: relative;
           clear: both;
         ">
-          <div style="display: flex; justify-content: center; align-items: center; padding: 4px;">
+          <div style="display: flex; justify-content: center; align-items: center; padding: 8px; background: #f8fafc;">
             <img 
               src="${url}" 
               alt="Image" 
@@ -312,53 +308,54 @@ function RichTextEditor({ value, onChange }) {
                 max-width: 100%;
                 width: auto;
                 height: auto;
-                max-height: 400px;
+                max-height: 450px;
                 display: block;
                 object-fit: contain;
-                background: #f1f5f9;
-                border-radius: 4px;
+                background: #f8fafc;
+                border-radius: 8px;
               "
             />
           </div>
           <div style="
             position: absolute;
-            top: 8px;
-            right: 8px;
+            top: 12px;
+            right: 12px;
             opacity: 0;
-            transition: opacity 0.2s ease;
+            transition: opacity 0.25s ease;
             z-index: 10;
           " class="image-actions">
             <button 
               style="
-                background: rgba(220, 38, 38, 0.9);
+                background: rgba(220, 38, 38, 0.95);
                 color: #fff;
                 border: none;
                 border-radius: 50%;
-                width: 32px;
-                height: 32px;
+                width: 36px;
+                height: 36px;
                 font-size: 16px;
                 cursor: pointer;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+                transition: all 0.2s;
               "
             >
-              ✕
+              <X size={16} />
             </button>
           </div>
           <div style="
             position: absolute;
-            bottom: 8px;
-            left: 8px;
-            background: rgba(0,0,0,0.4);
+            bottom: 12px;
+            left: 12px;
+            background: rgba(0,0,0,0.5);
             color: #fff;
-            padding: 2px 10px;
-            border-radius: 4px;
-            font-size: 10px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
             font-weight: 500;
-            backdrop-filter: blur(4px);
-          ">📸</div>
+            backdrop-filter: blur(8px);
+          ">📸 Image</div>
         </div>
         <br />
       `;
@@ -404,72 +401,150 @@ function RichTextEditor({ value, onChange }) {
     }
   };
 
-  const Btn = ({ children, onClick, title }) => (
+  const ToolbarButton = ({ children, onClick, title, active }) => (
     <button
       type="button"
       title={title}
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
-      style={rteBtnStyle}
-      onMouseEnter={(e) => e.currentTarget.style.background = "#f1f5f9"}
-      onMouseLeave={(e) => e.currentTarget.style.background = "#fff"}
+      style={{
+        background: active ? "#eef2ff" : "#fff",
+        border: active ? "1px solid #4f46e5" : "1px solid #e2e8f0",
+        borderRadius: 6,
+        width: 32,
+        height: 32,
+        cursor: "pointer",
+        fontSize: 13,
+        fontWeight: 500,
+        color: active ? "#4f46e5" : "#0f172a",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        transition: "all 0.15s ease",
+      }}
+      onMouseEnter={(e) => {
+        if (!active) {
+          e.currentTarget.style.background = "#f1f5f9";
+          e.currentTarget.style.borderColor = "#94a3b8";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!active) {
+          e.currentTarget.style.background = "#fff";
+          e.currentTarget.style.borderColor = "#e2e8f0";
+        }
+      }}
     >
       {children}
     </button>
   );
 
   return (
-    <div style={{ border: "1px solid var(--border-light)", borderRadius: 10, overflow: "hidden" }}>
+    <div style={{ 
+      border: "1px solid #e2e8f0", 
+      borderRadius: 12, 
+      overflow: "hidden",
+      boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+    }}>
       {/* Toolbar */}
       <div
         style={{
           display: "flex",
-          gap: 4,
-          padding: 8,
-          background: "var(--bg-base)",
-          borderBottom: "1px solid var(--border-light)",
+          gap: 3,
+          padding: "8px 12px",
+          background: "#fafbfc",
+          borderBottom: "1px solid #e2e8f0",
           flexWrap: "wrap",
           alignItems: "center",
         }}
       >
-        <Btn title="Bold" onClick={() => exec("bold")}><strong>B</strong></Btn>
-        <Btn title="Italic" onClick={() => exec("italic")}><em>I</em></Btn>
-        <Btn title="Underline" onClick={() => exec("underline")}><u>U</u></Btn>
-        <Btn title="Strikethrough" onClick={() => exec("strikeThrough")}><s>S</s></Btn>
+        {/* Text Formatting */}
+        <ToolbarButton title="Bold" onClick={() => exec("bold")}>
+          <Bold size={15} />
+        </ToolbarButton>
+        <ToolbarButton title="Italic" onClick={() => exec("italic")}>
+          <Italic size={15} />
+        </ToolbarButton>
+        <ToolbarButton title="Underline" onClick={() => exec("underline")}>
+          <Underline size={15} />
+        </ToolbarButton>
+        <ToolbarButton title="Strikethrough" onClick={() => exec("strikeThrough")}>
+          <Strikethrough size={15} />
+        </ToolbarButton>
 
-        <span style={{ width: 1, height: 24, background: "var(--border-light)", margin: "0 4px" }} />
+        <div style={{ width: 1, height: 24, background: "#e2e8f0", margin: "0 4px" }} />
 
-        <Btn title="Heading 2" onClick={() => exec("formatBlock", "<h2>")}>H2</Btn>
-        <Btn title="Heading 3" onClick={() => exec("formatBlock", "<h3>")}>H3</Btn>
-        <Btn title="Paragraph" onClick={() => exec("formatBlock", "<p>")}>P</Btn>
+        {/* Headings */}
+        <ToolbarButton title="Heading 2" onClick={() => exec("formatBlock", "<h2>")}>
+          <span style={{ fontSize: 14, fontWeight: 700 }}>H2</span>
+        </ToolbarButton>
+        <ToolbarButton title="Heading 3" onClick={() => exec("formatBlock", "<h3>")}>
+          <span style={{ fontSize: 13, fontWeight: 600 }}>H3</span>
+        </ToolbarButton>
+        <ToolbarButton title="Paragraph" onClick={() => exec("formatBlock", "<p>")}>
+          <span style={{ fontSize: 13 }}>P</span>
+        </ToolbarButton>
 
-        <span style={{ width: 1, height: 24, background: "var(--border-light)", margin: "0 4px" }} />
+        <div style={{ width: 1, height: 24, background: "#e2e8f0", margin: "0 4px" }} />
 
-        <Btn title="Bullet list" onClick={() => exec("insertUnorderedList")}>List</Btn>
-        <Btn title="Numbered list" onClick={() => exec("insertOrderedList")}>Num</Btn>
-        <Btn title="Quote" onClick={() => exec("formatBlock", "<blockquote>")}>Quote</Btn>
+        {/* Lists */}
+        <ToolbarButton title="Bullet list" onClick={() => exec("insertUnorderedList")}>
+          <List size={15} />
+        </ToolbarButton>
+        <ToolbarButton title="Numbered list" onClick={() => exec("insertOrderedList")}>
+          <ListOrdered size={15} />
+        </ToolbarButton>
+        <ToolbarButton title="Quote" onClick={() => exec("formatBlock", "<blockquote>")}>
+          <Quote size={15} />
+        </ToolbarButton>
 
-        <span style={{ width: 1, height: 24, background: "var(--border-light)", margin: "0 4px" }} />
+        <div style={{ width: 1, height: 24, background: "#e2e8f0", margin: "0 4px" }} />
 
-        <Btn title="Insert link" onClick={insertLink}>Link</Btn>
-        <Btn title="Insert image URL" onClick={insertImageUrl}>Image</Btn>
+        {/* Links & Images */}
+        <ToolbarButton title="Insert link" onClick={insertLink}>
+          <Link size={15} />
+        </ToolbarButton>
+        <ToolbarButton title="Insert image URL" onClick={insertImageUrl}>
+          <Image size={15} />
+        </ToolbarButton>
 
-        <span style={{ width: 1, height: 24, background: "var(--border-light)", margin: "0 4px" }} />
+        <div style={{ width: 1, height: 24, background: "#e2e8f0", margin: "0 4px" }} />
 
+        {/* Upload Button */}
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
           style={{
-            ...rteBtnStyle,
-            width: 'auto',
-            padding: '0 14px',
-            gap: 6,
             background: isUploading ? "#f0fdf4" : "#fff",
-            color: isUploading ? "#16a34a" : "var(--text-primary)",
+            border: isUploading ? "1px solid #22c55e" : "1px solid #e2e8f0",
+            borderRadius: 6,
+            padding: "0 14px",
+            height: 32,
+            cursor: "pointer",
+            fontSize: 13,
+            fontWeight: 500,
+            color: isUploading ? "#16a34a" : "#0f172a",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            transition: "all 0.15s ease",
+          }}
+          onMouseEnter={(e) => {
+            if (!isUploading) {
+              e.currentTarget.style.background = "#f1f5f9";
+              e.currentTarget.style.borderColor = "#94a3b8";
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isUploading) {
+              e.currentTarget.style.background = "#fff";
+              e.currentTarget.style.borderColor = "#e2e8f0";
+            }
           }}
           title="Upload image (paste or drag & drop too)"
         >
-          {isUploading ? 'Uploading ' + uploadProgress + '%' : 'Upload'}
+          <Upload size={15} />
+          {isUploading ? `${uploadProgress}%` : 'Upload'}
         </button>
 
         <input
@@ -480,13 +555,19 @@ function RichTextEditor({ value, onChange }) {
           style={{ display: 'none' }}
         />
 
-        <Btn title="Clear formatting" onClick={() => exec("removeFormat")}>Clear</Btn>
-        <Btn title="Clear all" onClick={() => {
+        <div style={{ width: 1, height: 24, background: "#e2e8f0", margin: "0 4px" }} />
+
+        <ToolbarButton title="Clear formatting" onClick={() => exec("removeFormat")}>
+          <span style={{ fontSize: 14 }}>↺</span>
+        </ToolbarButton>
+        <ToolbarButton title="Clear all" onClick={() => {
           if (editorRef.current) {
             editorRef.current.innerHTML = '';
             handleInput();
           }
-        }}>X</Btn>
+        }}>
+          <X size={15} />
+        </ToolbarButton>
       </div>
 
       {/* Upload Progress */}
@@ -499,11 +580,11 @@ function RichTextEditor({ value, onChange }) {
           alignItems: "center",
           gap: 12,
         }}>
-          <div style={{ flex: 1, height: 6, background: "#e2e8f0", borderRadius: 4, overflow: "hidden" }}>
+          <div style={{ flex: 1, height: 4, background: "#e2e8f0", borderRadius: 2, overflow: "hidden" }}>
             <div style={{
               height: "100%",
-              background: "linear-gradient(90deg, #6C63FF, #8B83FF)",
-              borderRadius: 4,
+              background: "linear-gradient(90deg, #4f46e5, #818cf8)",
+              borderRadius: 2,
               transition: "width 0.3s ease",
               width: uploadProgress + '%',
             }} />
@@ -526,7 +607,7 @@ function RichTextEditor({ value, onChange }) {
         onDragOver={handleDragOver}
         style={{
           minHeight: 350,
-          padding: "16px 20px",
+          padding: "20px 24px",
           fontSize: 16,
           lineHeight: 1.8,
           outline: "none",
@@ -543,20 +624,29 @@ function RichTextEditor({ value, onChange }) {
         justifyContent: "space-between",
         alignItems: "center",
         padding: "8px 16px",
-        background: "#f8fafc",
+        background: "#fafbfc",
         borderTop: "1px solid #e2e8f0",
         fontSize: 12,
         color: "#94a3b8",
       }}>
         <span>
-          <strong>{editorRef.current?.textContent?.length || 0}</strong> characters
+          <span style={{ fontWeight: 600, color: "#475569" }}>{charCount}</span> characters
           {uploadedImages.length > 0 && (
             <span style={{ marginLeft: 16 }}>
-              Images: {uploadedImages.length}
+              🖼️ <span style={{ fontWeight: 600, color: "#475569" }}>{uploadedImages.length}</span> images
             </span>
           )}
         </span>
-        <span>Tip: Hover over images to see remove button</span>
+        <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          <span style={{ 
+            display: "inline-block",
+            width: 6,
+            height: 6,
+            borderRadius: "50%",
+            background: "#22c55e",
+          }} />
+          Ready
+        </span>
       </div>
     </div>
   );
@@ -564,35 +654,37 @@ function RichTextEditor({ value, onChange }) {
 
 // ---------- Tab button helper ----------
 const tabBtnStyle = (active) => ({
-  background: active ? "var(--primary)" : "#fff",
-  color: active ? "#fff" : "var(--text-secondary)",
-  border: "1px solid var(--border-light)",
-  padding: "6px 16px",
+  background: active ? "#4f46e5" : "#fff",
+  color: active ? "#fff" : "#64748b",
+  border: active ? "1px solid #4f46e5" : "1px solid #e2e8f0",
+  padding: "6px 18px",
   borderRadius: 8,
   fontSize: 13,
   fontWeight: 600,
   cursor: "pointer",
-  transition: "all 0.2s",
+  transition: "all 0.2s ease",
 });
 
 // Shared field styles
 const labelStyle = {
   display: "block",
-  fontSize: 14,
+  fontSize: 13,
   fontWeight: 600,
   marginBottom: 6,
-  color: "var(--text-secondary)",
+  color: "#475569",
+  letterSpacing: "0.3px",
 };
 
 const inputStyle = {
   padding: "12px 16px",
-  fontSize: 16,
+  fontSize: 15,
   borderRadius: 10,
-  border: "1px solid var(--border-light)",
+  border: "1px solid #e2e8f0",
   width: "100%",
   background: "#fff",
   color: "#0f172a",
-  transition: "border-color 0.2s",
+  transition: "border-color 0.2s, box-shadow 0.2s",
+  outline: "none",
 };
 
 // ---------- NewsModal Component ----------
@@ -609,6 +701,7 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
   });
   const [imageMode, setImageMode] = useState("url");
   const [imagePreview, setImagePreview] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (news) {
@@ -686,25 +779,29 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSaving(true);
 
     console.log('=== SAVING NEWS ===');
     console.log('Title:', form.title);
     console.log('Content length:', form.content?.length || 0);
     console.log('Image exists:', !!form.image);
-    if (form.image) {
-      console.log('Image length:', form.image.length);
-      console.log('Image starts with data:', form.image?.startsWith('data:'));
-    }
 
     if (form.status === "scheduled" && !form.scheduledDate) {
       Swal.fire("Missing date", "Pick a publish date/time for a scheduled post.", "warning");
+      setIsSaving(false);
       return;
     }
 
-    onSave(form);
-    onClose();
+    try {
+      await onSave(form);
+      onClose();
+    } catch (error) {
+      console.error('Save error:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCategoryChange = (e) => {
@@ -727,37 +824,46 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
         left: 0,
         width: "100vw",
         height: "100vh",
-        background: "#fff",
+        background: "#f8fafc",
         zIndex: 9999,
         overflow: "hidden",
       }}
     >
+      {/* Close Button */}
       <button
         type="button"
         onClick={onClose}
         style={{
           position: "fixed",
-          top: "20px",
-          right: "20px",
-          width: "45px",
-          height: "45px",
+          top: 20,
+          right: 20,
+          width: 44,
+          height: 44,
           borderRadius: "50%",
           border: "none",
-          background: "#ef4444",
+          background: "rgba(239, 68, 68, 0.95)",
           color: "#fff",
-          fontSize: "20px",
           cursor: "pointer",
           zIndex: 10000,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          boxShadow: "0 4px 12px rgba(239,68,68,0.4)",
-          transition: "transform 0.15s",
+          boxShadow: "0 4px 16px rgba(239,68,68,0.35)",
+          transition: "all 0.2s ease",
+          backdropFilter: "blur(4px)",
         }}
-        onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.08)")}
-        onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = "scale(1.08)";
+          e.currentTarget.style.background = "rgba(239,68,68,1)";
+          e.currentTarget.style.boxShadow = "0 6px 24px rgba(239,68,68,0.5)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = "scale(1)";
+          e.currentTarget.style.background = "rgba(239,68,68,0.95)";
+          e.currentTarget.style.boxShadow = "0 4px 16px rgba(239,68,68,0.35)";
+        }}
       >
-        X
+        <X size={24} />
       </button>
 
       <div
@@ -766,45 +872,99 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
           height: "100%",
           padding: "30px 40px 40px",
           overflowY: "auto",
-          background: "var(--surface)",
+          background: "#f8fafc",
           position: "relative",
         }}
       >
-        <h3
-          style={{
-            marginTop: 0,
-            fontSize: 28,
+        {/* Header */}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 16,
+          marginBottom: 28,
+        }}>
+          <div style={{
+            width: 48,
+            height: 48,
+            borderRadius: 14,
+            background: "linear-gradient(135deg, #4f46e5, #818cf8)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#fff",
+            fontSize: 22,
             fontWeight: 700,
-            color: "var(--text-primary)",
-            marginBottom: 28,
-          }}
-        >
-          {news ? "Edit News" : "Add News"}
-        </h3>
+            boxShadow: "0 4px 16px rgba(79,70,229,0.3)",
+          }}>
+            {news ? "✏️" : "📝"}
+          </div>
+          <div>
+            <h3
+              style={{
+                margin: 0,
+                fontSize: 26,
+                fontWeight: 700,
+                color: "#0f172a",
+                letterSpacing: "-0.5px",
+              }}
+            >
+              {news ? "Edit News" : "Create New News"}
+            </h3>
+            <p style={{
+              margin: "4px 0 0",
+              fontSize: 14,
+              color: "#64748b",
+            }}>
+              {news ? "Update the article details below" : "Fill in the details to create a new article"}
+            </p>
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit}>
+          {/* Title & Subtitle */}
           <div style={{ display: "flex", gap: 20, marginBottom: 20, flexWrap: "wrap" }}>
             <div style={{ flex: "1 1 320px" }}>
-              <label style={labelStyle}>Title *</label>
+              <label style={labelStyle}>Title <span style={{ color: "#ef4444" }}>*</span></label>
               <input
-                placeholder="Enter title"
+                placeholder="Enter article title"
                 value={form.title}
                 required
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
-                style={inputStyle}
+                style={{
+                  ...inputStyle,
+                  fontSize: 17,
+                  fontWeight: 600,
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = "#4f46e5";
+                  e.target.style.boxShadow = "0 0 0 3px rgba(79,70,229,0.1)";
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = "#e2e8f0";
+                  e.target.style.boxShadow = "none";
+                }}
               />
             </div>
             <div style={{ flex: "1 1 320px" }}>
               <label style={labelStyle}>Subtitle</label>
               <input
-                placeholder="Enter subtitle"
+                placeholder="Enter subtitle (optional)"
                 value={form.subtitle}
                 onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
                 style={inputStyle}
+                onFocus={(e) => {
+                  e.target.style.borderColor = "#4f46e5";
+                  e.target.style.boxShadow = "0 0 0 3px rgba(79,70,229,0.1)";
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = "#e2e8f0";
+                  e.target.style.boxShadow = "none";
+                }}
               />
             </div>
           </div>
 
+          {/* Content */}
           <div style={{ marginBottom: 20 }}>
             <label style={labelStyle}>Content</label>
             <RichTextEditor
@@ -814,10 +974,23 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
             />
           </div>
 
+          {/* Category, Tags, Status */}
           <div style={{ display: "flex", gap: 20, marginBottom: 20, flexWrap: "wrap" }}>
             <div style={{ flex: "1 1 220px" }}>
               <label style={labelStyle}>Category</label>
-              <select value={form.category} onChange={handleCategoryChange} style={inputStyle}>
+              <select 
+                value={form.category} 
+                onChange={handleCategoryChange} 
+                style={inputStyle}
+                onFocus={(e) => {
+                  e.target.style.borderColor = "#4f46e5";
+                  e.target.style.boxShadow = "0 0 0 3px rgba(79,70,229,0.1)";
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = "#e2e8f0";
+                  e.target.style.boxShadow = "none";
+                }}
+              >
                 <option value="">-- Select category --</option>
                 {categories.map((c) => (
                   <option key={c.name} value={c.name}>
@@ -835,6 +1008,14 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
                 value={form.tags}
                 onChange={(e) => setForm({ ...form, tags: e.target.value })}
                 style={inputStyle}
+                onFocus={(e) => {
+                  e.target.style.borderColor = "#4f46e5";
+                  e.target.style.boxShadow = "0 0 0 3px rgba(79,70,229,0.1)";
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = "#e2e8f0";
+                  e.target.style.boxShadow = "none";
+                }}
               />
             </div>
 
@@ -844,15 +1025,24 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
                 style={inputStyle}
+                onFocus={(e) => {
+                  e.target.style.borderColor = "#4f46e5";
+                  e.target.style.boxShadow = "0 0 0 3px rgba(79,70,229,0.1)";
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = "#e2e8f0";
+                  e.target.style.boxShadow = "none";
+                }}
               >
-                <option value="draft">Draft</option>
-                <option value="pending">Pending Review</option>
-                <option value="published">Published</option>
-                <option value="scheduled">Scheduled</option>
+                <option value="draft">📄 Draft</option>
+                <option value="pending">⏳ Pending Review</option>
+                <option value="published">✅ Published</option>
+                <option value="scheduled">📅 Scheduled</option>
               </select>
             </div>
           </div>
 
+          {/* Scheduled Date */}
           {form.status === "scheduled" && (
             <div style={{ marginBottom: 20 }}>
               <label style={labelStyle}>Publish Date & Time</label>
@@ -860,11 +1050,23 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
                 type="datetime-local"
                 value={form.scheduledDate}
                 onChange={(e) => setForm({ ...form, scheduledDate: e.target.value })}
-                style={{ ...inputStyle, maxWidth: 320 }}
+                style={{
+                  ...inputStyle,
+                  maxWidth: 320,
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = "#4f46e5";
+                  e.target.style.boxShadow = "0 0 0 3px rgba(79,70,229,0.1)";
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = "#e2e8f0";
+                  e.target.style.boxShadow = "none";
+                }}
               />
             </div>
           )}
 
+          {/* Featured Image */}
           <div style={{ marginBottom: 24 }}>
             <label style={labelStyle}>Featured Image</label>
             <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
@@ -873,14 +1075,14 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
                 style={tabBtnStyle(imageMode === "upload")}
                 onClick={() => setImageMode("upload")}
               >
-                Upload
+                📤 Upload
               </button>
               <button
                 type="button"
                 style={tabBtnStyle(imageMode === "url")}
                 onClick={() => setImageMode("url")}
               >
-                URL
+                🔗 URL
               </button>
             </div>
 
@@ -889,7 +1091,11 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
                 type="file"
                 accept="image/*"
                 onChange={handleImageUpload}
-                style={{ ...inputStyle, padding: "8px" }}
+                style={{
+                  ...inputStyle,
+                  padding: "10px",
+                  cursor: "pointer",
+                }}
               />
             ) : (
               <input
@@ -900,6 +1106,14 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
                   setImagePreview(e.target.value);
                 }}
                 style={inputStyle}
+                onFocus={(e) => {
+                  e.target.style.borderColor = "#4f46e5";
+                  e.target.style.boxShadow = "0 0 0 3px rgba(79,70,229,0.1)";
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = "#e2e8f0";
+                  e.target.style.boxShadow = "none";
+                }}
               />
             )}
 
@@ -911,11 +1125,12 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
                   style={{
                     maxWidth: 320,
                     maxHeight: 200,
-                    borderRadius: 10,
-                    border: "1px solid var(--border-light)",
+                    borderRadius: 12,
+                    border: "1px solid #e2e8f0",
                     display: "block",
                     objectFit: "contain",
                     background: "#f8fafc",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
                   }}
                   onError={(e) => {
                     console.error('Preview image failed to load:', imagePreview);
@@ -932,30 +1147,46 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
                     position: "absolute",
                     top: -8,
                     right: -8,
-                    background: "var(--error)",
+                    background: "#ef4444",
                     color: "#fff",
                     border: "none",
                     borderRadius: "50%",
-                    width: 24,
-                    height: 24,
+                    width: 28,
+                    height: 28,
                     cursor: "pointer",
-                    fontSize: 13,
+                    fontSize: 14,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: "0 2px 8px rgba(239,68,68,0.3)",
+                    transition: "all 0.2s",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "scale(1.08)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "scale(1)";
                   }}
                 >
-                  X
+                  <X size={16} />
                 </button>
               </div>
             )}
           </div>
 
+          {/* Action Buttons */}
           <div
             style={{
               display: "flex",
               gap: 14,
               justifyContent: "flex-end",
-              borderTop: "1px solid var(--border-light)",
+              borderTop: "1px solid #e2e8f0",
               paddingTop: 24,
               marginTop: 8,
+              background: "#fafbfc",
+              margin: "0 -40px -40px",
+              padding: "20px 40px",
+              borderRadius: "0 0 12px 12px",
             }}
           >
             <button
@@ -963,48 +1194,100 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
               onClick={onClose}
               style={{
                 background: "transparent",
-                border: "1px solid var(--border-light)",
+                border: "1px solid #e2e8f0",
                 padding: "12px 32px",
                 borderRadius: 10,
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: 600,
                 cursor: "pointer",
-                color: "var(--text-secondary)",
-                transition: "background 0.15s",
+                color: "#64748b",
+                transition: "all 0.15s ease",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg-base)")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "#f1f5f9";
+                e.currentTarget.style.borderColor = "#94a3b8";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.borderColor = "#e2e8f0";
+              }}
             >
               Cancel
             </button>
             <button
               type="submit"
+              disabled={isSaving}
               style={{
-                background: "var(--primary)",
+                background: isSaving ? "#94a3b8" : "linear-gradient(135deg, #4f46e5, #6366f1)",
                 color: "#fff",
                 border: "none",
-                padding: "12px 36px",
+                padding: "12px 40px",
                 borderRadius: 10,
-                fontSize: 16,
+                fontSize: 15,
                 fontWeight: 700,
-                cursor: "pointer",
-                boxShadow: "0 4px 14px rgba(79,70,229,0.35)",
-                transition: "transform 0.15s, box-shadow 0.15s",
+                cursor: isSaving ? "not-allowed" : "pointer",
+                boxShadow: isSaving ? "none" : "0 4px 16px rgba(79,70,229,0.35)",
+                transition: "all 0.2s ease",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "scale(1.02)";
-                e.currentTarget.style.boxShadow = "0 6px 20px rgba(79,70,229,0.45)";
+                if (!isSaving) {
+                  e.currentTarget.style.transform = "scale(1.02)";
+                  e.currentTarget.style.boxShadow = "0 6px 24px rgba(79,70,229,0.45)";
+                }
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "scale(1)";
-                e.currentTarget.style.boxShadow = "0 4px 14px rgba(79,70,229,0.35)";
+                if (!isSaving) {
+                  e.currentTarget.style.transform = "scale(1)";
+                  e.currentTarget.style.boxShadow = "0 4px 16px rgba(79,70,229,0.35)";
+                }
               }}
             >
-              Save
+              {isSaving ? (
+                <>
+                  <span style={{
+                    display: "inline-block",
+                    width: 18,
+                    height: 18,
+                    border: "2px solid rgba(255,255,255,0.3)",
+                    borderTop: "2px solid #fff",
+                    borderRadius: "50%",
+                    animation: "spin 0.8s linear infinite",
+                  }} />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  {news ? "💾 Update Article" : "✨ Create Article"}
+                </>
+              )}
             </button>
           </div>
         </form>
       </div>
+
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        ::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
+      `}</style>
     </div>
   );
 }

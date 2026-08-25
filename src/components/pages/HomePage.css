@@ -700,22 +700,7 @@ body {
   transform: scale(1.04);
 }
 
-.trending-number-badge {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  background: rgba(0,0,0,0.7);
-  color: #fff;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 700;
-  backdrop-filter: blur(4px);
-}
+/* ✅ trending-number-badge REMOVED */
 
 .trending-item-content {
   padding: 12px 14px;

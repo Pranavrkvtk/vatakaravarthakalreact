@@ -8,9 +8,10 @@ import NewsModal from "./NewsModal";
 import NewsTab from "./NewsTab";
 import AdsTab from "./AdsTab";
 import CategoriesTab from "./CategoriesTab";
-import DashboardTab from "./DashboardTab";  // ✅ imported premium version
+import DashboardTab from "./DashboardTab";
 
-import { getAllNewsAdmin as getAllNews, createNews, updateNews, deleteNews, bulkAction } from '../../api/news';
+// ✅ ADD: import checkScheduledPosts
+import { getAllNewsAdmin as getAllNews, createNews, updateNews, deleteNews, bulkAction, checkScheduledPosts } from '../../api/news';
 
 // ---------- Loading Spinner ----------
 const LoadingSpinner = () => (
@@ -141,107 +142,6 @@ const DateTimeWidget = ({ isMobile, currentTime }) => (
   </div>
 );
 
-// ---------- RichTextEditor ----------
-const rteBtnStyle = {
-  background: "#fff",
-  border: "1px solid var(--border-light)",
-  borderRadius: 6,
-  width: 30,
-  height: 30,
-  cursor: "pointer",
-  fontSize: 13,
-  fontWeight: 700,
-  color: "var(--text-primary)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-};
-
-function RichTextEditor({ value, onChange }) {
-  const editorRef = useRef(null);
-
-  useEffect(() => {
-    if (editorRef.current) {
-      editorRef.current.innerHTML = value || "";
-    }
-  }, []);
-
-  const handleInput = () => {
-    if (editorRef.current) onChange(editorRef.current.innerHTML);
-  };
-
-  const exec = (cmd, arg = null) => {
-    document.execCommand(cmd, false, arg);
-    handleInput();
-  };
-
-  const insertLink = () => {
-    const url = window.prompt("Enter URL:", "https://");
-    if (url) exec("createLink", url);
-  };
-
-  const Btn = ({ children, onClick, title }) => (
-    <button
-      type="button"
-      title={title}
-      onMouseDown={(e) => e.preventDefault()}
-      onClick={onClick}
-      style={rteBtnStyle}
-    >
-      {children}
-    </button>
-  );
-
-  return (
-    <div
-      style={{
-        border: "1px solid var(--border-light)",
-        borderRadius: 10,
-        overflow: "hidden",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          gap: 6,
-          padding: 8,
-          background: "var(--bg-base)",
-          borderBottom: "1px solid var(--border-light)",
-          flexWrap: "wrap",
-        }}
-      >
-        <Btn title="Bold" onClick={() => exec("bold")}>B</Btn>
-        <Btn title="Italic" onClick={() => exec("italic")}><em>I</em></Btn>
-        <Btn title="Underline" onClick={() => exec("underline")}><u>U</u></Btn>
-        <Btn title="Heading" onClick={() => exec("formatBlock", "<h2>")}>H2</Btn>
-        <Btn title="Paragraph" onClick={() => exec("formatBlock", "<p>")}>P</Btn>
-        <Btn title="Bullet list" onClick={() => exec("insertUnorderedList")}>•≡</Btn>
-        <Btn title="Numbered list" onClick={() => exec("insertOrderedList")}>1≡</Btn>
-        <Btn title="Quote" onClick={() => exec("formatBlock", "<blockquote>")}>❝</Btn>
-        <Btn title="Insert link" onClick={insertLink}>🔗</Btn>
-        <Btn title="Clear formatting" onClick={() => exec("removeFormat")}>⨯</Btn>
-      </div>
-      <div
-        ref={editorRef}
-        contentEditable
-        suppressContentEditableWarning
-        onInput={handleInput}
-        onBlur={handleInput}
-        style={{
-          minHeight: 220,
-          padding: "14px 16px",
-          fontSize: 15,
-          lineHeight: 1.6,
-          outline: "none",
-          color: "#0f172a",
-          background: "#fff",
-          overflowY: "auto",
-        }}
-      />
-    </div>
-  );
-}
-
 // ---------- Status badge ----------
 const STATUS_STYLES = {
   published: { bg: "#dcfce7", color: "#16a34a" },
@@ -290,9 +190,59 @@ const qeLabelStyle = {
   letterSpacing: 0.3,
 };
 
-// ---------- Preview Modal (placeholder) ----------
+// ---------- Preview Modal ----------
 function PreviewModal({ item, onClose }) {
-  return null; // your implementation here
+  if (!item) return null;
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: "rgba(0,0,0,0.6)",
+        zIndex: 999,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "20px",
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          background: "#fff",
+          borderRadius: 16,
+          maxWidth: 700,
+          width: "100%",
+          maxHeight: "90vh",
+          overflow: "auto",
+          padding: "30px",
+          position: "relative",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          style={{
+            position: "absolute",
+            top: 12,
+            right: 16,
+            background: "none",
+            border: "none",
+            fontSize: 24,
+            cursor: "pointer",
+          }}
+        >
+          ✕
+        </button>
+        <h2>{item.title}</h2>
+        <StatusBadge status={item.status} />
+        <div style={{ marginTop: 16 }} dangerouslySetInnerHTML={{ __html: item.content }} />
+      </div>
+    </div>
+  );
 }
 
 // ---------- MAIN ADMIN DASHBOARD ----------
@@ -332,6 +282,12 @@ export default function AdminDashboard() {
   const [editingNews, setEditingNews] = useState(null);
   const [previewItem, setPreviewItem] = useState(null);
 
+  // ---- Selected items for bulk actions ----
+  const [selectedNewsIds, setSelectedNewsIds] = useState([]);
+
+  // ---- Toast notification for auto-publish ----
+  const [autoPublishToast, setAutoPublishToast] = useState(null);
+
   const [filters, setFilters] = useState({
     status: "all",
     category: "all",
@@ -367,21 +323,44 @@ export default function AdminDashboard() {
     return () => clearInterval(timer);
   }, []);
 
-  // ---------- Auto-publish scheduled posts ----------
+  // ============================================================
+  // Auto-publish scheduled posts using backend endpoint
+  // ============================================================
   useEffect(() => {
-    const timer = setInterval(() => {
-      setNews((prev) =>
-        prev.map((n) =>
-          n.status === "scheduled" &&
-          n.scheduledDate &&
-          new Date(n.scheduledDate) <= new Date()
-            ? { ...n, status: "published" }
-            : n
-        )
-      );
-    }, 30000);
-    return () => clearInterval(timer);
-  }, []);
+    const autoPublish = async () => {
+      try {
+        const result = await checkScheduledPosts();
+        if (result.published > 0) {
+          console.log(`✅ Auto-published ${result.published} post(s):`, result.titles);
+          
+          // Refresh the news list
+          await loadAllData();
+          
+          // Show toast notification
+          setAutoPublishToast({
+            count: result.published,
+            titles: result.titles,
+            timestamp: new Date(),
+          });
+
+          setTimeout(() => {
+            setAutoPublishToast(null);
+          }, 5000);
+        }
+      } catch (error) {
+        // Silent fail - don't show errors to user
+        console.error('Auto-publish check failed:', error);
+      }
+    };
+
+    // Run immediately when dashboard loads
+    autoPublish();
+    
+    // Then check every 30 seconds
+    const interval = setInterval(autoPublish, 30000);
+    
+    return () => clearInterval(interval);
+  }, []); // Empty dependency array - runs once on mount
 
   // ---------- Unified data loader (news + stats) ----------
   const loadAllData = async () => {
@@ -421,6 +400,51 @@ export default function AdminDashboard() {
   // Load data on mount
   useEffect(() => {
     loadAllData();
+  }, []);
+
+  // ============================================================
+  // NEW: Handle filter changes from DashboardTab
+  // ============================================================
+  const handleFilterChange = useCallback((status, category) => {
+    // Switch to news tab
+    setActiveTab('news');
+    
+    // Update filters after a small delay (to allow tab switch)
+    setTimeout(() => {
+      if (status && status !== 'all') {
+        setFilters(prev => ({ ...prev, status }));
+      } else if (status === 'all') {
+        setFilters(prev => ({ ...prev, status: 'all' }));
+      }
+      
+      if (category && category !== 'all') {
+        setFilters(prev => ({ ...prev, category }));
+      } else if (category === 'all') {
+        setFilters(prev => ({ ...prev, category: 'all' }));
+      }
+      
+      // Reset to first page
+      setCurrentPage(1);
+    }, 150);
+  }, []);
+
+  // ============================================================
+  // NEW: Listen for filter events from DashboardTab
+  // ============================================================
+  useEffect(() => {
+    const handleFilterEvent = (event) => {
+      const { status, category } = event.detail;
+      if (status) {
+        setFilters(prev => ({ ...prev, status }));
+      }
+      if (category) {
+        setFilters(prev => ({ ...prev, category }));
+      }
+      setCurrentPage(1);
+    };
+
+    window.addEventListener('filterChange', handleFilterEvent);
+    return () => window.removeEventListener('filterChange', handleFilterEvent);
   }, []);
 
   // ---------- Categories (Backend integrated) ----------
@@ -619,11 +643,13 @@ export default function AdminDashboard() {
     if (!result.isConfirmed) return;
     await updateNewsItem(id, { status: "trash" });
     Swal.fire("Moved to Trash", "", "success");
+    setSelectedNewsIds(prev => prev.filter(sid => sid !== id));
   };
 
   const handleRestoreNews = async (id) => {
     await updateNewsItem(id, { status: "draft" });
     Swal.fire("Restored", "Post moved back to Drafts.", "success");
+    setSelectedNewsIds(prev => prev.filter(sid => sid !== id));
   };
 
   const handleDeleteForever = async (id) => {
@@ -642,18 +668,85 @@ export default function AdminDashboard() {
       console.warn("Backend delete skipped:", err?.message);
     }
     setNews((prev) => prev.filter((n) => n.id !== id));
+    setSelectedNewsIds(prev => prev.filter(sid => sid !== id));
     Swal.fire("Deleted", "", "success");
+  };
+
+  // ============================================================
+  // Handle multiple selected news deletion
+  // ============================================================
+  const handleDeleteSelected = async () => {
+    if (selectedNewsIds.length === 0) {
+      Swal.fire("No Selection", "Please select at least one item to delete.", "warning");
+      return;
+    }
+
+    const result = await Swal.fire({
+      title: `Delete ${selectedNewsIds.length} selected item(s)?`,
+      text: "This action cannot be undone. All selected posts will be permanently deleted.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#dc2626",
+      confirmButtonText: `Yes, delete ${selectedNewsIds.length} item(s)`,
+      cancelButtonText: "Cancel",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await bulkAction(selectedNewsIds, "delete");
+    } catch (err) {
+      console.warn("Backend bulk delete skipped:", err?.message);
+      for (const id of selectedNewsIds) {
+        try {
+          await deleteNews(id);
+        } catch (e) {
+          console.warn(`Failed to delete ${id}:`, e);
+        }
+      }
+    }
+
+    setNews((prev) => prev.filter((n) => !selectedNewsIds.includes(n.id)));
+    setSelectedNewsIds([]);
+    Swal.fire("Deleted", `${selectedNewsIds.length} item(s) deleted successfully.`, "success");
+  };
+
+  // ============================================================
+  // Toggle selection for a single item
+  // ============================================================
+  const toggleSelectNews = (id) => {
+    setSelectedNewsIds((prev) =>
+      prev.includes(id) ? prev.filter((sid) => sid !== id) : [...prev, id]
+    );
+  };
+
+  // ============================================================
+  // Select/Deselect all visible items
+  // ============================================================
+  const toggleSelectAll = () => {
+    const visibleIds = getFilteredNews().map((n) => n.id);
+    const allSelected = visibleIds.every((id) => selectedNewsIds.includes(id));
+    if (allSelected) {
+      setSelectedNewsIds((prev) => prev.filter((id) => !visibleIds.includes(id)));
+    } else {
+      setSelectedNewsIds((prev) => [...new Set([...prev, ...visibleIds])]);
+    }
   };
 
   // ---------- Bulk action ----------
   const handleBulkAction = async (action, selectedIds) => {
     if (!action || selectedIds.length === 0) return;
+    
+    if (action === "delete") {
+      handleDeleteSelected();
+      return;
+    }
+    
     const labels = {
       publish: "publish",
       draft: "move to draft",
       trash: "move to trash",
       restore: "restore",
-      delete: "permanently delete",
     };
     const result = await Swal.fire({
       title: `${action.charAt(0).toUpperCase() + action.slice(1)} selected items?`,
@@ -671,24 +764,46 @@ export default function AdminDashboard() {
       console.warn("Backend bulk sync skipped:", err?.message);
     }
 
-    if (action === "delete") {
-      setNews((prev) => prev.filter((n) => !selectedIds.includes(n.id)));
-    } else {
-      const statusMap = {
-        publish: "published",
-        draft: "draft",
-        trash: "trash",
-        restore: "draft",
-      };
-      setNews((prev) =>
-        prev.map((n) =>
-          selectedIds.includes(n.id)
-            ? { ...n, status: statusMap[action] || n.status }
-            : n
-        )
+    const statusMap = {
+      publish: "published",
+      draft: "draft",
+      trash: "trash",
+      restore: "draft",
+    };
+    setNews((prev) =>
+      prev.map((n) =>
+        selectedIds.includes(n.id)
+          ? { ...n, status: statusMap[action] || n.status }
+          : n
+      )
+    );
+    setSelectedNewsIds([]);
+    Swal.fire("Done", "", "success");
+  };
+
+  // ---------- Get filtered news ----------
+  const getFilteredNews = () => {
+    let filtered = [...news];
+
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (n) =>
+          n.title?.toLowerCase().includes(term) ||
+          n.content?.toLowerCase().includes(term) ||
+          n.category?.toLowerCase().includes(term)
       );
     }
-    Swal.fire("Done", "", "success");
+
+    if (filters.status !== "all") {
+      filtered = filtered.filter((n) => n.status === filters.status);
+    }
+
+    if (filters.category !== "all") {
+      filtered = filtered.filter((n) => n.category === filters.category);
+    }
+
+    return filtered;
   };
 
   // ---------- Logout ----------
@@ -714,7 +829,14 @@ export default function AdminDashboard() {
 
     switch (activeTab) {
       case "dashboard":
-        return <DashboardTab stats={stats} recentPosts={news} categories={categories} />;
+        return (
+          <DashboardTab 
+            stats={stats} 
+            recentPosts={news} 
+            categories={categories}
+            onFilterChange={handleFilterChange}
+          />
+        );
       case "news":
         return (
           <NewsTab
@@ -737,6 +859,10 @@ export default function AdminDashboard() {
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
             categories={categories}
+            selectedIds={selectedNewsIds}
+            onToggleSelect={toggleSelectNews}
+            onToggleSelectAll={toggleSelectAll}
+            onDeleteSelected={handleDeleteSelected}
           />
         );
       case "categories":
@@ -797,7 +923,57 @@ export default function AdminDashboard() {
           border-radius: 8px;
           width: 100%;
         }
+        .auto-publish-toast {
+          position: fixed;
+          bottom: 80px;
+          right: 20px;
+          background: #16a34a;
+          color: #fff;
+          padding: 16px 24px;
+          border-radius: 12px;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+          z-index: 9999;
+          max-width: 400px;
+          animation: slideInUp 0.3s ease-out;
+          font-size: 14px;
+        }
+        .auto-publish-toast .count {
+          font-weight: 700;
+          font-size: 18px;
+        }
+        @keyframes slideInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @media (max-width: 768px) {
+          .auto-publish-toast {
+            bottom: 70px;
+            right: 10px;
+            left: 10px;
+            max-width: none;
+            padding: 12px 16px;
+            font-size: 13px;
+          }
+        }
       `}</style>
+
+      {/* Auto-Publish Toast Notification */}
+      {autoPublishToast && (
+        <div className="auto-publish-toast">
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ fontSize: 24 }}>✅</span>
+            <div>
+              <div>
+                <span className="count">{autoPublishToast.count}</span> post(s) auto-published
+              </div>
+              <div style={{ fontSize: 12, opacity: 0.8, marginTop: 4 }}>
+                {autoPublishToast.titles.slice(0, 2).join(", ")}
+                {autoPublishToast.titles.length > 2 && ` +${autoPublishToast.titles.length - 2} more`}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div
         style={{
@@ -941,9 +1117,59 @@ export default function AdminDashboard() {
             <h1 style={{ margin: 0, fontSize: isMobile ? 22 : 28 }}>
               {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
             </h1>
-            {!isMobile && (
-              <DateTimeWidget isMobile={false} currentTime={currentTime} />
-            )}
+            <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+              {!isMobile && <DateTimeWidget isMobile={false} currentTime={currentTime} />}
+              
+              {/* Check Scheduled Button */}
+              {activeTab === 'news' && (
+                <button
+                  onClick={async () => {
+                    try {
+                      const result = await checkScheduledPosts();
+                      if (result.published > 0) {
+                        Swal.fire({
+                          icon: 'success',
+                          title: `${result.published} post(s) published!`,
+                          text: result.titles.join('\n'),
+                          timer: 3000,
+                          showConfirmButton: false,
+                        });
+                        await loadAllData();
+                      } else {
+                        Swal.fire({
+                          icon: 'info',
+                          title: 'No scheduled posts due',
+                          text: 'All scheduled posts are still pending their scheduled time.',
+                          timer: 2000,
+                          showConfirmButton: false,
+                        });
+                      }
+                    } catch (error) {
+                      Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to check scheduled posts.',
+                      });
+                    }
+                  }}
+                  style={{
+                    background: '#2563eb',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: 8,
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    fontSize: 13,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                  }}
+                >
+                  <span>🔄</span> Check Scheduled
+                </button>
+              )}
+            </div>
           </div>
           {renderContent()}
         </main>
@@ -959,69 +1185,65 @@ export default function AdminDashboard() {
         )}
       </div>
 
-// In AdminDashboard.jsx - update the NewsModal section
-
-<NewsModal
-  isOpen={isAddModalOpen || isEditModalOpen}
-  onClose={() => {
-    setIsAddModalOpen(false);
-    setIsEditModalOpen(false);
-    setEditingNews(null);
-  }}
-  news={editingNews}
-  categories={categories}
-  onAddCategory={handleAddCategory}
-  onSave={async (data) => {
-    // 🔍 Debug logging
-    console.log('=== SAVING FROM ADMIN DASHBOARD ===');
-    console.log('Data:', data);
-    console.log('Image exists:', !!data.image);
-    if (data.image) {
-      console.log('Image length:', data.image.length);
-      console.log('Image type:', data.image.startsWith('data:') ? 'base64' : 'url');
-    }
-    
-    try {
-      if (editingNews) {
-        // For editing, only send the fields that have changed
-        const payload = { ...editingNews, ...data };
-        await updateNews(editingNews.id, payload);
-      } else {
-        await createNews(data);
-      }
-      
-      await loadAllData(); // Refresh both news and stats
-      Swal.fire('Success!', 'News saved successfully', 'success');
-      setIsAddModalOpen(false);
-      setIsEditModalOpen(false);
-      setEditingNews(null);
-    } catch (err) {
-      console.error('Error saving news:', err);
-      
-      // Fallback for offline
-      const newItem = {
-        ...data,
-        id: editingNews ? editingNews.id : Date.now(),
-        views: 0,
-        likes: 0,
-        shares: 0,
-        createdAt: new Date().toISOString(),
-        publishedDate: data.status === 'published' ? new Date().toISOString() : null,
-      };
-      
-      setNews((prev) => 
-        editingNews 
-          ? prev.map((n) => n.id === editingNews.id ? { ...n, ...newItem } : n)
-          : [newItem, ...prev]
-      );
-      
-      Swal.fire('Saved Locally', 'Article saved in local mode', 'success');
-      setIsAddModalOpen(false);
-      setIsEditModalOpen(false);
-      setEditingNews(null);
-    }
-  }}
-/>
+      {/* News Modal */}
+      <NewsModal
+        isOpen={isAddModalOpen || isEditModalOpen}
+        onClose={() => {
+          setIsAddModalOpen(false);
+          setIsEditModalOpen(false);
+          setEditingNews(null);
+        }}
+        news={editingNews}
+        categories={categories}
+        onAddCategory={handleAddCategory}
+        onSave={async (data) => {
+          console.log('=== SAVING FROM ADMIN DASHBOARD ===');
+          console.log('Data:', data);
+          console.log('Image exists:', !!data.image);
+          if (data.image) {
+            console.log('Image length:', data.image.length);
+            console.log('Image type:', data.image.startsWith('data:') ? 'base64' : 'url');
+          }
+          
+          try {
+            if (editingNews) {
+              const payload = { ...editingNews, ...data };
+              await updateNews(editingNews.id, payload);
+            } else {
+              await createNews(data);
+            }
+            
+            await loadAllData();
+            Swal.fire('Success!', 'News saved successfully', 'success');
+            setIsAddModalOpen(false);
+            setIsEditModalOpen(false);
+            setEditingNews(null);
+          } catch (err) {
+            console.error('Error saving news:', err);
+            
+            const newItem = {
+              ...data,
+              id: editingNews ? editingNews.id : Date.now(),
+              views: 0,
+              likes: 0,
+              shares: 0,
+              createdAt: new Date().toISOString(),
+              publishedDate: data.status === 'published' ? new Date().toISOString() : null,
+            };
+            
+            setNews((prev) => 
+              editingNews 
+                ? prev.map((n) => n.id === editingNews.id ? { ...n, ...newItem } : n)
+                : [newItem, ...prev]
+            );
+            
+            Swal.fire('Saved Locally', 'Article saved in local mode', 'success');
+            setIsAddModalOpen(false);
+            setIsEditModalOpen(false);
+            setEditingNews(null);
+          }
+        }}
+      />
 
       {/* Preview Modal */}
       <PreviewModal item={previewItem} onClose={() => setPreviewItem(null)} />

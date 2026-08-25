@@ -53,10 +53,20 @@ export const getNewsByCategory = async (category) => {
  * Fetch a single news item by ID (increments view count)
  * @param {number|string} id - News ID
  * @returns {Promise<Object>} News object with updated views
+ * @throws {Error} If news is not published yet (scheduled/draft)
  */
 export const getNewsById = async (id) => {
-  const response = await api.get(`/news/${id}`);
-  return response.data;
+  try {
+    const response = await api.get(`/news/${id}`);
+    return response.data;
+  } catch (error) {
+    // Handle 403 Forbidden - content not available yet
+    if (error.response?.status === 403) {
+      const message = error.response?.data?.error || 'This content is not available yet';
+      throw new Error(message);
+    }
+    throw error;
+  }
 };
 
 /**
@@ -72,10 +82,15 @@ export const likeNews = async (id) => {
 /**
  * Search news (public)
  * @param {string} keyword - Search keyword
- * @returns {Promise<Array>} List of matching news
+ * @param {number} page - Page number (0-based)
+ * @param {number} size - Items per page
+ * @param {string} sortBy - Sort: 'relevance', 'latest', 'oldest', 'views', 'likes'
+ * @returns {Promise<Object>} Search results with pagination
  */
-export const searchNews = async (keyword) => {
-  const response = await api.get(`/news/search?keyword=${encodeURIComponent(keyword)}`);
+export const searchNews = async (keyword, page = 0, size = 10, sortBy = 'relevance') => {
+  const response = await api.get('/news/search', {
+    params: { keyword, page, size, sortBy }
+  });
   return response.data;
 };
 
@@ -165,11 +180,36 @@ export const getAllNewsAdmin = async () => {
 
 /**
  * Fetch news by status (admin only)
- * @param {string} status - 'draft', 'published', 'trash'
+ * @param {string} status - 'draft', 'published', 'scheduled', 'trash'
  * @returns {Promise<Array>} News items with given status
  */
 export const getNewsByStatus = async (status) => {
   const response = await api.get(`/news/status/${status}`);
+  return response.data;
+};
+
+// ============================================================
+// NEW: Check and auto-publish scheduled posts (admin only)
+// ============================================================
+/**
+ * Check and publish any scheduled posts that are due (admin only)
+ * @returns {Promise<Object>} Result with published count and titles
+ */
+export const checkScheduledPosts = async () => {
+  const response = await api.post('/news/check-scheduled');
+  return response.data;
+};
+
+// ============================================================
+// NEW: Debug endpoint to check news visibility status
+// ============================================================
+/**
+ * Debug a news item (admin only)
+ * @param {number|string} id - News ID
+ * @returns {Promise<Object>} Debug info
+ */
+export const debugNews = async (id) => {
+  const response = await api.get(`/news/debug/${id}`);
   return response.data;
 };
 
@@ -182,21 +222,6 @@ export const getNewsByStatus = async (status) => {
  */
 export const getSearchSuggestions = async (prefix) => {
   const response = await api.get(`/news/search/suggestions?prefix=${encodeURIComponent(prefix)}`);
-  return response.data;
-};
-
-/**
- * Advanced search with pagination
- * @param {string} keyword - Search keyword
- * @param {number} page - Page number (0-based)
- * @param {number} size - Items per page
- * @param {string} sortBy - Sort: 'relevance', 'latest', 'oldest', 'views', 'likes'
- * @returns {Promise<Object>} Search results with pagination
- */
-export const searchNewsAdvanced = async (keyword, page = 0, size = 10, sortBy = 'relevance') => {
-  const response = await api.get('/news/search', {
-    params: { keyword, page, size, sortBy }
-  });
   return response.data;
 };
 
@@ -334,4 +359,52 @@ export const getAdStats = async () => {
  */
 export const bulkDeleteAds = async (ids) => {
   await api.delete('/ads/bulk', { data: ids });
+};
+
+// ============================================================
+// EXPORT ALL FUNCTIONS FOR BACKWARD COMPATIBILITY
+// ============================================================
+export default {
+  // News
+  getAllNews,
+  getLatestNews,
+  getBreakingNews,
+  getTrendingNews,
+  getNewsByCategory,
+  getNewsById,
+  likeNews,
+  searchNews,
+  searchNewsAdvanced: searchNews,
+  advancedSearch,
+  getSearchSuggestions,
+  
+  // Admin News
+  createNews,
+  updateNews,
+  deleteNews,
+  bulkAction,
+  getAllNewsAdmin,
+  getNewsByStatus,
+  checkScheduledPosts,
+  debugNews,
+  
+  // Categories
+  getAllCategories,
+  
+  // Ads
+  getAllAds,
+  getActiveAds,
+  getAdsByPosition,
+  getAdById,
+  createAd,
+  updateAd,
+  deleteAd,
+  toggleAdStatus,
+  recordAdView,
+  recordAdClick,
+  getAdStats,
+  bulkDeleteAds,
+  
+  // Images
+  uploadContentImage,
 };

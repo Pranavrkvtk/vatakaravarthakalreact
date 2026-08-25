@@ -1,6 +1,7 @@
 // src/components/pages/HomePage.jsx
 import React, { useEffect, useState } from 'react';
 import { getAllNews, getAdsByPosition, recordAdView, recordAdClick } from '../../api/news';
+import { getImageSrc } from '../../utils/imageUtils';
 import { ChevronLeft, ChevronRight, Clock, Zap, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import './HomePage.css';
@@ -32,9 +33,24 @@ const formatDate = (news) => {
 };
 
 // ----------------------------------------------------------------
+// Helper: Check if news is from the last 7 days
+// ----------------------------------------------------------------
+const isFromLastWeek = (news) => {
+  const raw = news.publishedDate || news.createdAt || news.date;
+  if (!raw) return false;
+  const d = new Date(raw);
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  return d >= weekAgo;
+};
+
+// ----------------------------------------------------------------
 // Helper: safe image src with placeholder fallback
 // ----------------------------------------------------------------
 const safeImage = (image) => {
+  if (typeof getImageSrc === 'function') {
+    return getImageSrc(image) || '/placeholder-image.jpg';
+  }
   return image || '/placeholder-image.jpg';
 };
 
@@ -76,7 +92,6 @@ const AdDisplay = ({ position, className = '' }) => {
     loadAds();
   }, [position]);
 
-  // Rotate ads every 8 seconds
   useEffect(() => {
     if (ads.length > 1) {
       const interval = setInterval(() => {
@@ -113,7 +128,6 @@ const AdDisplay = ({ position, className = '' }) => {
   }
 
   if (ads.length === 0) {
-    console.log(`⚠️ No ads found for position: ${position}`);
     return null;
   }
 
@@ -220,21 +234,37 @@ const DateLine = ({ date, className = '' }) => (
 );
 
 // ================================================================
-// Sidebar Component with Auto-Rotating Trending
+// Sidebar Component with Weekly Trending (NO NUMBER BADGE)
 // ================================================================
 const Sidebar = ({ newsData }) => {
   const [tab, setTab] = useState('latest');
   const [trendingIndex, setTrendingIndex] = useState(0);
 
-  const getItems = (type) => {
-    if (type === 'latest') {
-      return newsData.slice(0, 5);
-    } else {
-      return newsData.slice(5, 10);
+  // Latest: 5 most recent
+  const latestItems = [...newsData].slice(0, 5);
+  
+  // Trending: Weekly based - filter last 7 days, sort by views, take top 5
+  const getTrendingItems = () => {
+    // Filter news from the last 7 days
+    const weeklyNews = [...newsData].filter(item => isFromLastWeek(item));
+    
+    // Sort by views (descending) and take top 5
+    const sortedByViews = [...weeklyNews]
+      .sort((a, b) => (b.views || 0) - (a.views || 0))
+      .slice(0, 5);
+    
+    // If we have less than 5 weekly news, fallback to all news sorted by views
+    if (sortedByViews.length < 5) {
+      const allSorted = [...newsData]
+        .sort((a, b) => (b.views || 0) - (a.views || 0))
+        .slice(0, 5);
+      return allSorted;
     }
+    
+    return sortedByViews;
   };
 
-  const list = getItems(tab);
+  const list = tab === 'latest' ? latestItems : getTrendingItems();
 
   // Auto-rotate trending news every 5 seconds
   useEffect(() => {
@@ -290,7 +320,6 @@ const Sidebar = ({ newsData }) => {
         </div>
       )}
 
-      {/* TRENDING TAB with Auto-Rotation */}
       {tab === 'trending' && list.length > 0 && (
         <div className="sidebar-trending">
           <div className="trending-slider">
@@ -303,16 +332,27 @@ const Sidebar = ({ newsData }) => {
                     className="trending-img"
                     onError={handleImgError}
                   />
-                  <div className="trending-number-badge">{trendingIndex + 1}</div>
+                  {/* ✅ NUMBER BADGE REMOVED */}
                 </div>
                 <div className="trending-item-content">
                   <h4 className="trending-item-title">{currentTrendingItem.title}</h4>
-                  <DateLine date={formatDate(currentTrendingItem)} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                    <DateLine date={formatDate(currentTrendingItem)} />
+                    <span style={{ 
+                      fontSize: 11, 
+                      color: '#f59e0b',
+                      fontWeight: 600,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 3
+                    }}>
+                    
+                    </span>
+                  </div>
                 </div>
               </div>
             </Link>
             
-            {/* Dots indicator */}
             <div className="trending-dots">
               {list.map((_, idx) => (
                 <span
@@ -346,7 +386,6 @@ const Sidebar = ({ newsData }) => {
         </ul>
       )}
 
-      {/* Sidebar Ad */}
       <div className="sidebar-ad">
         <AdDisplay position="sidebar" />
       </div>
@@ -461,7 +500,7 @@ const NewsCard = ({ news }) => (
 );
 
 // ================================================================
-// NewsGrid - All cards equal size, no featured/span-2
+// NewsGrid - All cards equal size
 // ================================================================
 const NewsGrid = ({ newsData }) => {
   if (!newsData || newsData.length === 0) return null;
@@ -475,9 +514,9 @@ const NewsGrid = ({ newsData }) => {
   );
 };
 
-// ----------------------------------------------------------------
+// ================================================================
 // HomePage
-// ----------------------------------------------------------------
+// ================================================================
 const HomePage = () => {
   const [newsData, setNewsData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -486,7 +525,12 @@ const HomePage = () => {
   useEffect(() => {
     getAllNews()
       .then((data) => {
-        setNewsData(data);
+        const publishedNews = data.filter(
+          (item) => item.status === 'published' || !item.status
+        );
+        
+        console.log(`📰 Total: ${data.length}, Published: ${publishedNews.length}`);
+        setNewsData(publishedNews);
         setLoading(false);
       })
       .catch((err) => {

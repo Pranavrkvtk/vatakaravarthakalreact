@@ -2,7 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const DashboardTab = ({ stats, recentPosts, categories }) => {
+const DashboardTab = ({ stats, recentPosts, categories, onFilterChange }) => {
   // ✅ Safety: Ensure categories is an array
   const safeCategories = Array.isArray(categories) ? categories : [];
   
@@ -18,9 +18,26 @@ const DashboardTab = ({ stats, recentPosts, categories }) => {
   // ✅ Safety: Ensure recentPosts is an array
   const safeRecentPosts = Array.isArray(recentPosts) ? recentPosts.slice(0, 5) : [];
 
+  // Handle stat card click - switch to news tab with filter
+  const handleStatClick = (status) => {
+    if (onFilterChange) {
+      onFilterChange(status);
+    } else {
+      // Fallback: find and click news tab, then set filter via event
+      const newsTab = document.querySelector('[data-tab="news"]');
+      if (newsTab) {
+        newsTab.click();
+        // Dispatch custom event for filter change
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('filterChange', { detail: { status } }));
+        }, 100);
+      }
+    }
+  };
+
   return (
     <div>
-      {/* Stats Cards */}
+      {/* Stats Cards - Now Clickable */}
       <div
         style={{
           display: 'grid',
@@ -29,11 +46,41 @@ const DashboardTab = ({ stats, recentPosts, categories }) => {
           marginBottom: '32px',
         }}
       >
-        <StatCard label="Total Posts" value={safeStats.total} color="#4f46e5" />
-        <StatCard label="Published" value={safeStats.published} color="#16a34a" />
-        <StatCard label="Scheduled" value={safeStats.scheduled} color="#2563eb" />
-        <StatCard label="Drafts" value={safeStats.drafts} color="#d97706" />
-        <StatCard label="Trash" value={safeStats.trash} color="#dc2626" />
+        <StatCard 
+          label="Total Posts" 
+          value={safeStats.total} 
+          color="#4f46e5" 
+          onClick={() => handleStatClick('all')}
+          icon="📊"
+        />
+        <StatCard 
+          label="Published" 
+          value={safeStats.published} 
+          color="#16a34a" 
+          onClick={() => handleStatClick('published')}
+          icon="✅"
+        />
+        <StatCard 
+          label="Scheduled" 
+          value={safeStats.scheduled} 
+          color="#2563eb" 
+          onClick={() => handleStatClick('scheduled')}
+          icon="⏳"
+        />
+        <StatCard 
+          label="Drafts" 
+          value={safeStats.drafts} 
+          color="#d97706" 
+          onClick={() => handleStatClick('drafts')}
+          icon="📝"
+        />
+        <StatCard 
+          label="Trash" 
+          value={safeStats.trash} 
+          color="#dc2626" 
+          onClick={() => handleStatClick('trash')}
+          icon="🗑️"
+        />
       </div>
 
       {/* Two Column Layout */}
@@ -73,6 +120,18 @@ const DashboardTab = ({ stats, recentPosts, categories }) => {
                     background: 'var(--bg-base)',
                     borderRadius: '8px',
                     borderBottom: '1px solid var(--border-light)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                  onClick={() => {
+                    // Navigate to news tab and filter by this post's status
+                    handleStatClick(post.status || 'all');
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'var(--primary-soft)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'var(--bg-base)';
                   }}
                 >
                   <div>
@@ -105,6 +164,7 @@ const DashboardTab = ({ stats, recentPosts, categories }) => {
                           }
                         )}
                       </span>
+                      <span>👁️ {post.views || 0}</span>
                     </div>
                   </div>
                   <span
@@ -140,7 +200,6 @@ const DashboardTab = ({ stats, recentPosts, categories }) => {
           <Link
             to="#"
             onClick={() => {
-              // Find and click the news tab
               const newsTab = document.querySelector('[data-tab="news"]');
               if (newsTab) newsTab.click();
             }}
@@ -177,8 +236,6 @@ const DashboardTab = ({ stats, recentPosts, categories }) => {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {safeCategories.map((category, index) => {
-                // ✅ CRITICAL FIX: Handle different category data types
-                
                 // If category is a string
                 if (typeof category === 'string') {
                   return (
@@ -191,6 +248,23 @@ const DashboardTab = ({ stats, recentPosts, categories }) => {
                         padding: '8px 12px',
                         background: 'var(--bg-base)',
                         borderRadius: '8px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                      onClick={() => {
+                        // Filter by this category
+                        if (onFilterChange) {
+                          onFilterChange('all', category);
+                        }
+                        // Navigate to categories tab
+                        const categoriesTab = document.querySelector('[data-tab="categories"]');
+                        if (categoriesTab) categoriesTab.click();
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'var(--primary-soft)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'var(--bg-base)';
                       }}
                     >
                       <span style={{ color: 'var(--text-primary)' }}>{category}</span>
@@ -209,7 +283,7 @@ const DashboardTab = ({ stats, recentPosts, categories }) => {
                   );
                 }
 
-                // If category is an object, access its properties
+                // If category is an object
                 if (typeof category === 'object' && category !== null) {
                   const categoryName = category.name || 'Unnamed';
                   const categoryCount = category.count || 0;
@@ -224,6 +298,30 @@ const DashboardTab = ({ stats, recentPosts, categories }) => {
                         padding: '8px 12px',
                         background: 'var(--bg-base)',
                         borderRadius: '8px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                      }}
+                      onClick={() => {
+                        // Filter by this category
+                        if (onFilterChange) {
+                          onFilterChange('all', categoryName);
+                        }
+                        // Navigate to news tab with category filter
+                        const newsTab = document.querySelector('[data-tab="news"]');
+                        if (newsTab) {
+                          newsTab.click();
+                          setTimeout(() => {
+                            window.dispatchEvent(new CustomEvent('filterChange', { 
+                              detail: { status: 'all', category: categoryName } 
+                            }));
+                          }, 100);
+                        }
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'var(--primary-soft)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'var(--bg-base)';
                       }}
                     >
                       <span style={{ color: 'var(--text-primary)' }}>{categoryName}</span>
@@ -242,7 +340,6 @@ const DashboardTab = ({ stats, recentPosts, categories }) => {
                   );
                 }
 
-                // Fallback
                 return null;
               })}
             </div>
@@ -250,7 +347,6 @@ const DashboardTab = ({ stats, recentPosts, categories }) => {
           <Link
             to="#"
             onClick={() => {
-              // Find and click the categories tab
               const categoriesTab = document.querySelector('[data-tab="categories"]');
               if (categoriesTab) categoriesTab.click();
             }}
@@ -273,8 +369,9 @@ const DashboardTab = ({ stats, recentPosts, categories }) => {
 };
 
 // ---------- Stat Card Component ----------
-const StatCard = ({ label, value, color }) => (
+const StatCard = ({ label, value, color, onClick, icon }) => (
   <div
+    onClick={onClick}
     style={{
       background: 'var(--surface)',
       padding: '20px',
@@ -282,8 +379,29 @@ const StatCard = ({ label, value, color }) => (
       border: '1px solid var(--border-light)',
       textAlign: 'center',
       transition: 'all 0.2s',
+      cursor: 'pointer',
+      position: 'relative',
+      overflow: 'hidden',
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.transform = 'translateY(-4px)';
+      e.currentTarget.style.boxShadow = '0 8px 25px rgba(0,0,0,0.1)';
+      e.currentTarget.style.borderColor = color;
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.transform = 'translateY(0)';
+      e.currentTarget.style.boxShadow = 'none';
+      e.currentTarget.style.borderColor = 'var(--border-light)';
     }}
   >
+    <div
+      style={{
+        fontSize: '24px',
+        marginBottom: '4px',
+      }}
+    >
+      {icon}
+    </div>
     <div
       style={{
         fontSize: '28px',
@@ -302,6 +420,16 @@ const StatCard = ({ label, value, color }) => (
       }}
     >
       {label}
+    </div>
+    <div
+      style={{
+        fontSize: '11px',
+        color: 'var(--text-secondary)',
+        opacity: 0.6,
+        marginTop: '6px',
+      }}
+    >
+      Click to filter
     </div>
   </div>
 );

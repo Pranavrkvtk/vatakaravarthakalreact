@@ -317,11 +317,7 @@ const NewsView = () => {
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
               />
-              {/* Protection badge */}
-              <div className="image-protection-badge">
-                <ImageIcon size={14} />
-                <span>Protected</span>
-              </div>
+      
             </div>
             <div className="image-overlay">
               <span className="category-badge">{news.category || 'General'}</span>
@@ -374,7 +370,7 @@ const NewsView = () => {
 
         {/* Share Buttons - WhatsApp, Facebook, Instagram */}
         <div className="share-section">
-          <h3 className="share-title">Share this article</h3>
+          <h3 className="share-title">Share this News</h3>
           <div className="share-buttons">
             {/* WhatsApp */}
             <button className="share-btn whatsapp" onClick={shareOnWhatsApp}>
