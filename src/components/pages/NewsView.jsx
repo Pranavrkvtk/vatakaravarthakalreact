@@ -1,9 +1,9 @@
 // src/components/pages/NewsView.jsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getNewsById } from '../../api/news';
 import { getImageSrc } from '../../utils/imageUtils';
-import { ArrowLeft, Calendar, Clock } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Image as ImageIcon, AlertCircle, Shield } from 'lucide-react';
 import './NewsView.css';
 
 const NewsView = () => {
@@ -11,7 +11,12 @@ const NewsView = () => {
   const [news, setNews] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [imageError, setImageError] = useState(false);
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [showProtectionAlert, setShowProtectionAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('Content is protected');
+  const articleRef = useRef(null);
+  const imageRef = useRef(null);
+  const alertTimeoutRef = useRef(null);
 
   useEffect(() => {
     getNewsById(id)
@@ -33,9 +38,242 @@ const NewsView = () => {
         setError('Article not found.');
         setLoading(false);
       });
+
+    // Cleanup timeout on unmount
+    return () => {
+      if (alertTimeoutRef.current) {
+        clearTimeout(alertTimeoutRef.current);
+      }
+    };
   }, [id]);
 
+  // ============================================================
+  // PROTECTION: Show alert with custom message
+  // ============================================================
+  const showProtectionAlertWithMessage = (message) => {
+    setAlertMessage(message);
+    setShowProtectionAlert(true);
+    if (alertTimeoutRef.current) {
+      clearTimeout(alertTimeoutRef.current);
+    }
+    alertTimeoutRef.current = setTimeout(() => {
+      setShowProtectionAlert(false);
+    }, 2500);
+  };
+
+  // ============================================================
+  // PROTECTION: Disable right-click on entire article
+  // ============================================================
+  const handleContextMenu = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    showProtectionAlertWithMessage('⛔ Right-click is disabled');
+    return false;
+  };
+
+  // ============================================================
+  // PROTECTION: Disable keyboard shortcuts
+  // ============================================================
+  const handleKeyDown = (e) => {
+    // Prevent Ctrl+C, Ctrl+S, Ctrl+P, Ctrl+U, Ctrl+Shift+I, F12
+    if (
+      (e.ctrlKey || e.metaKey) && 
+      ['c', 'C', 's', 'S', 'p', 'P', 'u', 'U', 'i', 'I'].includes(e.key)
+    ) {
+      e.preventDefault();
+      e.stopPropagation();
+      showProtectionAlertWithMessage('⛔ Keyboard shortcuts are disabled');
+      return false;
+    }
+    
+    // Prevent F12 (DevTools)
+    if (e.key === 'F12') {
+      e.preventDefault();
+      e.stopPropagation();
+      showProtectionAlertWithMessage('⛔ Developer tools are disabled');
+      return false;
+    }
+
+    // Prevent Ctrl+Shift+I (DevTools)
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'i' || e.key === 'I')) {
+      e.preventDefault();
+      e.stopPropagation();
+      showProtectionAlertWithMessage('⛔ Developer tools are disabled');
+      return false;
+    }
+
+    // Prevent Ctrl+Shift+J (DevTools Console)
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'j' || e.key === 'J')) {
+      e.preventDefault();
+      e.stopPropagation();
+      showProtectionAlertWithMessage('⛔ Developer tools are disabled');
+      return false;
+    }
+
+    // Prevent Ctrl+U (View Source)
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
+      e.preventDefault();
+      e.stopPropagation();
+      showProtectionAlertWithMessage('⛔ View source is disabled');
+      return false;
+    }
+  };
+
+  // ============================================================
+  // PROTECTION: Disable text selection
+  // ============================================================
+  const handleSelectStart = (e) => {
+    // Allow selection on share buttons and back link
+    if (e.target.closest('.share-btn') || e.target.closest('.back-link')) {
+      return true;
+    }
+    e.preventDefault();
+    return false;
+  };
+
+  // ============================================================
+  // PROTECTION: Disable copy
+  // ============================================================
+  const handleCopy = (e) => {
+    // Allow copy on share buttons and back link
+    if (e.target.closest('.share-btn') || e.target.closest('.back-link')) {
+      return true;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    showProtectionAlertWithMessage('⛔ Copying content is disabled');
+    return false;
+  };
+
+  // ============================================================
+  // PROTECTION: Disable cut
+  // ============================================================
+  const handleCut = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    showProtectionAlertWithMessage('⛔ Cutting content is disabled');
+    return false;
+  };
+
+  // ============================================================
+  // PROTECTION: Disable paste
+  // ============================================================
+  const handlePaste = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    showProtectionAlertWithMessage('⛔ Pasting is disabled');
+    return false;
+  };
+
+  // ============================================================
+  // PROTECTION: Disable drag
+  // ============================================================
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    showProtectionAlertWithMessage('⛔ Dragging is disabled');
+    return false;
+  };
+
+  // ============================================================
+  // PROTECTION: Disable drop
+  // ============================================================
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  };
+
+  // ============================================================
+  // PROTECTION: Disable image interactions
+  // ============================================================
+  const handleImageContextMenu = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    showProtectionAlertWithMessage('⛔ Image right-click is disabled');
+    return false;
+  };
+
+  const handleImageDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    showProtectionAlertWithMessage('⛔ Image dragging is disabled');
+    return false;
+  };
+
+  const handleImageLoad = () => {
+    setIsImageLoaded(true);
+  };
+
+  // ============================================================
+  // PROTECTION: Disable touch events on mobile (long press)
+  // ============================================================
+  const handleTouchStart = (e) => {
+    const target = e.target;
+    // Allow touch on share buttons and back link
+    if (target.closest('.share-btn') || target.closest('.back-link')) {
+      return true;
+    }
+    
+    // Block long press on images and text
+    if (target.tagName === 'IMG' || target.closest('.protected-content')) {
+      // Only block if it's a long press (touch > 500ms)
+      // We'll use touchstart to set a timer
+      const touchStartTime = Date.now();
+      const timer = setTimeout(() => {
+        const touchEndTime = Date.now();
+        if (touchEndTime - touchStartTime > 500) {
+          e.preventDefault();
+          showProtectionAlertWithMessage('⛔ Long press is disabled');
+        }
+      }, 500);
+      
+      // Store timer on element to clear it on touchend
+      target._touchTimer = timer;
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    const target = e.target;
+    if (target._touchTimer) {
+      clearTimeout(target._touchTimer);
+      delete target._touchTimer;
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    // Block touch move on images
+    if (e.target.tagName === 'IMG' || e.target.closest('.protected-content')) {
+      e.preventDefault();
+      return false;
+    }
+  };
+
+  // ============================================================
+  // PROTECTION: Disable native screenshot on mobile (prevent default)
+  // ============================================================
+  const handleKeyUp = (e) => {
+    // Block volume down + power button combination (Android screenshot)
+    // This is limited but helps
+    if (e.key === 'VolumeDown' || e.key === 'Power') {
+      e.preventDefault();
+    }
+  };
+
+  // ============================================================
+  // PROTECTION: Disable double click selection
+  // ============================================================
+  const handleDoubleClick = (e) => {
+    if (!e.target.closest('.share-btn') && !e.target.closest('.back-link')) {
+      e.preventDefault();
+      showProtectionAlertWithMessage('⛔ Double-click selection is disabled');
+      return false;
+    }
+  };
+
+  // ============================================================
   // Share functions
+  // ============================================================
   const shareOnWhatsApp = () => {
     const url = window.location.href;
     const text = `${news.title}\n\nRead more: ${url}`;
@@ -48,12 +286,14 @@ const NewsView = () => {
   };
 
   const shareOnInstagram = () => {
-    // Instagram doesn't support direct URL sharing, copy to clipboard instead
     const url = window.location.href;
     navigator.clipboard.writeText(url);
     alert('📋 Link copied! Open Instagram and paste it in your story or post.');
   };
 
+  // ============================================================
+  // Render
+  // ============================================================
   if (loading) return <div className="news-view-container"><div className="loader">Loading...</div></div>;
   if (error) return <div className="news-view-container error">{error}</div>;
   if (!news) return <div className="news-view-container">Article not found.</div>;
@@ -61,24 +301,94 @@ const NewsView = () => {
   const imageSrc = getImageSrc(news.image);
 
   return (
-    <div className="news-view-container">
+    <div 
+      className="news-view-container protected-content"
+      ref={articleRef}
+      onContextMenu={handleContextMenu}
+      onKeyDown={handleKeyDown}
+      onKeyUp={handleKeyUp}
+      onSelectStart={handleSelectStart}
+      onCopy={handleCopy}
+      onCut={handleCut}
+      onPaste={handlePaste}
+      onDragStart={handleDrag}
+      onDrag={handleDrag}
+      onDrop={handleDrop}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchMove={handleTouchMove}
+      onDoubleClick={handleDoubleClick}
+      // CSS protection
+      style={{
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        MozUserSelect: 'none',
+        msUserSelect: 'none',
+        WebkitTouchCallout: 'none',
+        pointerEvents: 'auto',
+        touchAction: 'manipulation',
+      }}
+    >
+      {/* Protection Alert */}
+      {showProtectionAlert && (
+        <div className="protection-alert">
+          <Shield size={18} />
+          <span>{alertMessage}</span>
+        </div>
+      )}
+
+      {/* Protection Badge (Watermark) */}
+      <div className="protection-watermark">
+        <Shield size={12} />
+        <span>Protected Content</span>
+      </div>
+
       <Link to="/" className="back-link">
         <ArrowLeft size={18} /> Back to Home
       </Link>
 
       <article className="news-article">
-        {/* Image display */}
+        {/* Image display with protection */}
         {news.image && (
           <div className="article-image-wrapper">
-            <img 
-              src={imageSrc || '/placeholder-image.jpg'}
-              alt={news.title}
-              onError={(e) => {
-                console.error('Image failed to load:', imageSrc);
-                setImageError(true);
-                e.target.src = '/placeholder-image.jpg';
-              }}
-            />
+            <div className="image-protection-overlay">
+              <img 
+                ref={imageRef}
+                src={imageSrc || '/placeholder-image.jpg'}
+                alt={news.title}
+                className={`article-image ${isImageLoaded ? 'loaded' : 'loading'}`}
+                onError={(e) => {
+                  console.error('Image failed to load:', imageSrc);
+                  e.target.src = '/placeholder-image.jpg';
+                }}
+                onLoad={handleImageLoad}
+                onContextMenu={handleImageContextMenu}
+                onDragStart={handleImageDrag}
+                draggable={false}
+                style={{
+                  userSelect: 'none',
+                  WebkitUserSelect: 'none',
+                  MozUserSelect: 'none',
+                  msUserSelect: 'none',
+                  pointerEvents: 'none',
+                  WebkitTouchCallout: 'none',
+                  touchAction: 'none',
+                }}
+              />
+              {/* Protection layer - invisible but blocks all interactions */}
+              <div 
+                className="image-protection-layer"
+                onContextMenu={handleImageContextMenu}
+                onDragStart={handleImageDrag}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+              />
+              {/* Protection badge */}
+              <div className="image-protection-badge">
+                <ImageIcon size={14} />
+                <span>Protected</span>
+              </div>
+            </div>
             <div className="image-overlay">
               <span className="category-badge">{news.category || 'General'}</span>
             </div>
@@ -107,8 +417,15 @@ const NewsView = () => {
         {news.subtitle && <h2 className="article-subtitle">{news.subtitle}</h2>}
 
         <div
-          className="article-content"
+          className="article-content protected-text"
           dangerouslySetInnerHTML={{ __html: news.content }}
+          style={{
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            MozUserSelect: 'none',
+            msUserSelect: 'none',
+            WebkitTouchCallout: 'none',
+          }}
         />
 
         {news.tags && (
