@@ -19,8 +19,10 @@ function Navbar() {
   const [searchSuggestions, setSearchSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false); // ✅ Mobile search toggle
   const searchTimeoutRef = useRef(null);
   const searchRef = useRef(null);
+  const mobileSearchInputRef = useRef(null);
   
   const navigate = useNavigate();
 
@@ -107,6 +109,7 @@ function Navbar() {
     const query = searchQuery.trim();
     if (query) {
       setShowSuggestions(false);
+      setIsMobileSearchOpen(false); // ✅ Close mobile search
       navigate(`/search?keyword=${encodeURIComponent(query)}`);
       setSearchQuery("");
     }
@@ -116,6 +119,7 @@ function Navbar() {
   const handleSuggestionClick = (suggestion) => {
     setSearchQuery(suggestion);
     setShowSuggestions(false);
+    setIsMobileSearchOpen(false); // ✅ Close mobile search
     navigate(`/search?keyword=${encodeURIComponent(suggestion)}`);
     setSearchQuery("");
   };
@@ -136,6 +140,7 @@ function Navbar() {
     if (e.key === 'Escape') {
       setShowSuggestions(false);
       setSearchQuery("");
+      setIsMobileSearchOpen(false);
     }
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -144,6 +149,22 @@ function Navbar() {
       } else {
         handleSearch(e);
       }
+    }
+  };
+
+  // ─── Toggle mobile search ─────────────────────────────────────
+  const toggleMobileSearch = () => {
+    setIsMobileSearchOpen(!isMobileSearchOpen);
+    if (!isMobileSearchOpen) {
+      // Focus input after opening
+      setTimeout(() => {
+        if (mobileSearchInputRef.current) {
+          mobileSearchInputRef.current.focus();
+        }
+      }, 100);
+    } else {
+      setSearchQuery("");
+      setShowSuggestions(false);
     }
   };
 
@@ -226,8 +247,8 @@ function Navbar() {
           </nav>
 
           <div className="nav-actions">
-            {/* ✅ Enhanced Search with Suggestions */}
-            <div className="search-wrapper" ref={searchRef}>
+            {/* ✅ Desktop Search with Suggestions */}
+            <div className="search-wrapper desktop-search" ref={searchRef}>
               <form onSubmit={handleSearch} className="search-form">
                 <Search size={18} className="search-icon" />
                 <input 
@@ -286,6 +307,15 @@ function Navbar() {
               )}
             </div>
 
+            {/* ✅ Mobile Search Toggle Button */}
+            <button
+              className="mobile-search-toggle"
+              onClick={toggleMobileSearch}
+              aria-label="Search"
+            >
+              <Search size={20} />
+            </button>
+
             <Link to="/login" className="admin-login-link" title="Admin Login">
               <span className="admin-icon">👤</span>
             </Link>
@@ -296,6 +326,64 @@ function Navbar() {
             >
               {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
             </button>
+          </div>
+        </div>
+
+        {/* ✅ Mobile Search Overlay */}
+        <div className={`mobile-search-overlay ${isMobileSearchOpen ? 'active' : ''}`}>
+          <div className="mobile-search-container">
+            <form onSubmit={handleSearch} className="mobile-search-form">
+              <Search size={20} className="mobile-search-icon" />
+              <input
+                ref={mobileSearchInputRef}
+                type="text"
+                placeholder="Search news..."
+                className="mobile-search-input"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
+                autoComplete="off"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  className="mobile-search-clear"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSearchSuggestions([]);
+                    setShowSuggestions(false);
+                  }}
+                >
+                  ✕
+                </button>
+              )}
+              <button type="submit" className="mobile-search-submit">
+                Search
+              </button>
+              <button
+                type="button"
+                className="mobile-search-close"
+                onClick={toggleMobileSearch}
+              >
+                ✕
+              </button>
+            </form>
+
+            {/* Mobile Suggestions */}
+            {showSuggestions && searchSuggestions.length > 0 && (
+              <div className="mobile-search-suggestions">
+                {searchSuggestions.map((suggestion, index) => (
+                  <div
+                    key={index}
+                    className="mobile-suggestion-item"
+                    onClick={() => handleSuggestionClick(suggestion)}
+                  >
+                    <Search size={14} className="suggestion-icon" />
+                    <span>{suggestion}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

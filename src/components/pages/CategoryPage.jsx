@@ -4,7 +4,7 @@ import { useParams, Link } from 'react-router-dom';
 import { getNewsByCategory, getAdsByPosition, recordAdView, recordAdClick } from '../../api/news';
 import { CATEGORY_COLORS } from './HomePage';
 import { 
-  Clock, ArrowRight, AlertCircle, RefreshCw, Zap, Eye, 
+  Clock, ArrowRight, AlertCircle, RefreshCw, Zap, 
   ChevronRight, Sparkles, Flame, Bookmark 
 } from 'lucide-react';
 import './CategoryPage.css';
@@ -404,7 +404,6 @@ const TrendingSection = ({ news }) => {
             <h4 className="trending-featured-title">{currentItem.title}</h4>
             <div className="trending-featured-meta">
               <DateLine date={currentItem.publishedDate || currentItem.publishedAt || currentItem.createdAt} />
-              {/* ✅ REMOVED: View count */}
             </div>
           </div>
         </Link>
@@ -449,7 +448,6 @@ const TrendingSection = ({ news }) => {
                       }) : 'Recent'
                     }
                   </span>
-                  {/* ✅ REMOVED: View count */}
                 </div>
               </div>
               <ChevronRight className="trending-arrow" size={16} />
@@ -624,11 +622,6 @@ const CategoryPage = () => {
                         </span>
                       )}
                       <DateLine date={featured.publishedDate || featured.publishedAt || featured.createdAt} />
-                      {featured.views > 0 && (
-                        <span className="featured-views">
-                          <Eye size={14} /> {featured.views.toLocaleString()}
-                        </span>
-                      )}
                     </div>
                     <span className="read-more-btn">
                       Read Article <ArrowRight size={18} className="arrow-icon" />
