@@ -121,38 +121,12 @@
   z-index: 2;
   pointer-events: all;
   -webkit-touch-callout: none;
+  -webkit-user-select: none;
   -khtml-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
   touch-action: none;
-}
-
-.image-protection-badge {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  color: #fff;
-  font-size: 0.65rem;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  z-index: 3;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  letter-spacing: 0.3px;
-  pointer-events: none;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.image-protection-badge svg {
-  width: 14px;
-  height: 14px;
 }
 
 .image-overlay {
@@ -317,7 +291,7 @@
 }
 
 .article-paragraph {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   line-height: 1.8;
   font-size: 1.05rem;
   color: #1e293b;
@@ -328,13 +302,113 @@
   -webkit-touch-callout: none;
 }
 
+.article-paragraph span {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-touch-callout: none;
+}
+
 /* ==============================================================
-   ✅ IN-CONTENT ADS — full width, natural height, same as HomePage
+   ✅ HEADINGS
+   ============================================================== */
+
+.article-heading {
+  margin: 1.5rem 0 0.75rem;
+  font-weight: 700;
+  color: #1f2937;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+h1.article-heading {
+  font-size: 1.8rem;
+}
+
+h2.article-heading {
+  font-size: 1.5rem;
+}
+
+h3.article-heading {
+  font-size: 1.25rem;
+}
+
+h4.article-heading {
+  font-size: 1.1rem;
+}
+
+h5.article-heading {
+  font-size: 1rem;
+}
+
+h6.article-heading {
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+/* ==============================================================
+   ✅ LISTS
+   ============================================================== */
+
+.article-list-wrapper {
+  margin: 0.75rem 0 1.25rem;
+  padding-left: 0.5rem;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.article-list {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+  line-height: 1.8;
+  color: #1e293b;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.article-list.ordered {
+  list-style-type: decimal;
+}
+
+.article-list.unordered {
+  list-style-type: disc;
+}
+
+.article-list li {
+  margin-bottom: 0.25rem;
+  padding-left: 0.25rem;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Nested lists */
+.article-list ul,
+.article-list ol {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+  padding-left: 1.5rem;
+}
+
+/* ==============================================================
+   ✅ IN-CONTENT ADS — Full Width, Natural Height
    ============================================================== */
 
 .in-content-ad {
-  margin: 28px 0;
-  padding: 8px 0;
+  margin: 20px 0;
+  padding: 4px 0;
   user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -381,8 +455,8 @@
   transform: scale(0.98);
 }
 
-/* ✅ Same as HomePage's .real-ad-image — full width, auto height, no crop */
-.in-content-ad-link img {
+/* ✅ Full width, auto height, no crop */
+.in-content-ad-image {
   width: 100% !important;
   height: auto !important;
   display: block !important;
@@ -392,8 +466,56 @@
   min-height: auto !important;
 }
 
-.ad-after-paragraph {
-  margin: 20px 0 30px;
+/* ─── Inline Ads (inside paragraphs) ───────────────────────── */
+.ad-inline {
+  margin: 16px 0;
+  padding: 4px 0;
+}
+
+.ad-inline .ad-label {
+  font-size: 0.55rem;
+  color: #94a3b8;
+  text-align: center;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-touch-callout: none;
+  display: block;
+}
+
+.ad-inline .in-content-ad-link {
+  border-radius: 12px !important;
+  border: 1px solid #e2e8f0 !important;
+  overflow: hidden;
+  display: block;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  width: 100%;
+  background: #ffffff;
+}
+
+.ad-inline .in-content-ad-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(11, 11, 26, 0.13);
+}
+
+.ad-inline .in-content-ad-link:active {
+  transform: scale(0.98);
+}
+
+.ad-inline .in-content-ad-image {
+  width: 100% !important;
+  height: auto !important;
+  display: block !important;
+  object-fit: contain !important;
+  max-width: 100% !important;
+  max-height: none !important;
+  min-height: auto !important;
 }
 
 .ad-between-paragraphs {
@@ -538,7 +660,7 @@
 }
 
 /* ==============================================================
-   ✅ HEADER AD - Above Back to Home (full width, natural height)
+   ✅ HEADER AD - Above Back to Home (Full Width, Natural Height)
    ============================================================== */
 
 .header-ad-wrapper {
@@ -569,7 +691,7 @@
   background: #ffffff !important;
 }
 
-.ad-header-top .in-content-ad-link img {
+.ad-header-top .in-content-ad-image {
   width: 100% !important;
   height: auto !important;
   display: block !important;
@@ -579,10 +701,71 @@
 }
 
 /* ==============================================================
-   ✅ RESPONSIVE - ALL ADS FULL WIDTH, NATURAL HEIGHT (matches HomePage)
+   ✅ DESKTOP - Ad Sizing
    ============================================================== */
+@media (min-width: 769px) {
+  /* Inline ads - centered, smaller */
+  .ad-inline {
+    max-width: 70%;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 12px 0;
+  }
 
-/* Tablet */
+  .ad-inline .in-content-ad-image {
+    max-height: 250px !important;
+    min-height: 100px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto;
+  }
+
+  /* Regular content ads */
+  .in-content-ad {
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .in-content-ad-image {
+    max-height: 400px !important;
+    min-height: 150px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto;
+  }
+
+  /* Header ad */
+  .header-ad-wrapper {
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .ad-header-top .in-content-ad-image {
+    max-height: 400px !important;
+    min-height: 150px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto;
+  }
+
+  /* Footer ad - largest */
+  .ad-content-end .in-content-ad-image {
+    max-height: 450px !important;
+    min-height: 180px !important;
+  }
+
+  /* Ads between paragraphs */
+  .ad-between-paragraphs .in-content-ad-image {
+    max-height: 300px !important;
+    min-height: 120px !important;
+  }
+}
+
+/* ==============================================================
+   ✅ TABLET - Responsive (768px and below)
+   ============================================================== */
 @media (max-width: 768px) {
   .news-view-container {
     padding: 1.5rem 0.75rem;
@@ -616,7 +799,7 @@
   }
 
   .in-content-ad {
-    margin: 20px 0;
+    margin: 16px 0;
     padding: 6px 0;
   }
 
@@ -624,10 +807,22 @@
     font-size: 0.5rem;
   }
 
-  .in-content-ad-link img {
-    max-height: none !important;
-    min-height: auto !important;
+  .in-content-ad-image {
+    max-height: 300px !important;
+    min-height: 100px !important;
     object-fit: contain !important;
+  }
+
+  /* Inline ads on tablet */
+  .ad-inline {
+    max-width: 85%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .ad-inline .in-content-ad-image {
+    max-height: 200px !important;
+    min-height: 80px !important;
   }
 
   .ad-between-paragraphs {
@@ -653,15 +848,60 @@
     height: 20px;
   }
 
-  /* ✅ Header Ad - Tablet */
-  .ad-header-top .in-content-ad-link img {
-    max-height: none !important;
-    min-height: auto !important;
+  .ad-header-top .in-content-ad-image {
+    max-height: 300px !important;
+    min-height: 100px !important;
     object-fit: contain !important;
+  }
+
+  /* Heading and list adjustments */
+  .article-heading {
+    margin: 1.25rem 0 0.5rem;
+  }
+
+  h1.article-heading {
+    font-size: 1.6rem;
+  }
+
+  h2.article-heading {
+    font-size: 1.3rem;
+  }
+
+  h3.article-heading {
+    font-size: 1.15rem;
+  }
+
+  .article-list-wrapper {
+    margin: 0.5rem 0 1rem;
+  }
+
+  .article-list {
+    padding-left: 1.25rem;
+    line-height: 1.7;
+  }
+
+  /* ✅ Header Ad - Tablet */
+  .header-ad-wrapper {
+    margin: 0 0 12px 0;
+  }
+
+  .ad-header-top .in-content-ad-link {
+    border-radius: 0 !important;
+    border: none !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+
+  .ad-header-top .in-content-ad-image {
+    max-height: 300px !important;
+    min-height: 80px !important;
+    object-fit: contain !important;
+    width: 100% !important;
   }
 }
 
-/* Mobile */
+/* ==============================================================
+   ✅ MOBILE - Responsive (640px and below)
+   ============================================================== */
 @media (max-width: 640px) {
   .news-view-container {
     padding: 1rem 0.5rem;
@@ -679,18 +919,6 @@
 
   .article-image {
     max-height: 300px;
-  }
-
-  .image-protection-badge {
-    top: 8px;
-    right: 8px;
-    font-size: 0.55rem;
-    padding: 3px 8px;
-  }
-
-  .image-protection-badge svg {
-    width: 12px;
-    height: 12px;
   }
 
   .image-overlay {
@@ -718,9 +946,9 @@
     margin: 1rem 0;
   }
 
-  /* ✅ ALL ADS - Mobile (full width, natural height, same as HomePage) */
+  /* ✅ ALL ADS - Mobile (full width, natural height) */
   .in-content-ad {
-    margin: 16px 0;
+    margin: 12px 0;
     padding: 4px 0;
     width: 100%;
   }
@@ -734,12 +962,23 @@
     border-radius: 8px !important;
   }
 
-  .in-content-ad-link img {
+  .in-content-ad-image {
     width: 100% !important;
     height: auto !important;
-    max-height: none !important;
-    min-height: auto !important;
+    max-height: 200px !important;
+    min-height: 60px !important;
     object-fit: contain !important;
+  }
+
+  /* Inline ads on mobile - full width */
+  .ad-inline {
+    max-width: 100%;
+    margin: 10px 0;
+  }
+
+  .ad-inline .in-content-ad-image {
+    max-height: 150px !important;
+    min-height: 50px !important;
   }
 
   .article-paragraph {
@@ -799,16 +1038,23 @@
     font-size: 0.8rem;
   }
 
-  /* ✅ Header Ad - Mobile (full width, natural height, same as HomePage) */
+  /* ✅ Header Ad - Mobile */
   .header-ad-wrapper {
     margin: 0 0 10px 0;
+    padding: 0;
   }
 
-  .ad-header-top .in-content-ad-link img {
+  .ad-header-top .in-content-ad-link {
+    border-radius: 0 !important;
+    border: none !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+
+  .ad-header-top .in-content-ad-image {
     width: 100% !important;
     height: auto !important;
-    max-height: none !important;
-    min-height: auto !important;
+    max-height: 200px !important;
+    min-height: 60px !important;
     object-fit: contain !important;
   }
 
@@ -816,9 +1062,66 @@
     font-size: 0.45rem;
     margin-bottom: 4px;
   }
+
+  /* ✅ Footer Ad - Mobile */
+  .ad-content-end {
+    margin: 24px 0 12px;
+  }
+
+  .ad-content-end .in-content-ad-image {
+    max-height: 200px !important;
+    min-height: 60px !important;
+  }
+
+  /* ✅ Between Paragraphs Ads - Mobile */
+  .ad-between-paragraphs {
+    margin: 10px 0 16px;
+  }
+
+  .ad-between-paragraphs .in-content-ad-image {
+    max-height: 180px !important;
+    min-height: 50px !important;
+  }
+
+  /* Heading and list adjustments */
+  .article-heading {
+    margin: 1rem 0 0.5rem;
+  }
+
+  h1.article-heading {
+    font-size: 1.3rem;
+  }
+
+  h2.article-heading {
+    font-size: 1.15rem;
+  }
+
+  h3.article-heading {
+    font-size: 1.05rem;
+  }
+
+  h4.article-heading {
+    font-size: 1rem;
+  }
+
+  .article-list-wrapper {
+    margin: 0.5rem 0 0.75rem;
+  }
+
+  .article-list {
+    padding-left: 1.25rem;
+    line-height: 1.6;
+    font-size: 0.95rem;
+  }
+
+  .article-list li {
+    margin-bottom: 0.15rem;
+  }
 }
 
-/* Small Mobile */
+/* ==============================================================
+   ✅ SMALL MOBILE - Responsive (380px and below)
+   ============================================================== */
 @media (max-width: 380px) {
   .news-view-container {
     padding: 0.5rem 0.25rem;
@@ -851,18 +1154,22 @@
     line-height: 1.5;
   }
 
-  /* ✅ ALL ADS - Small Mobile (full width, natural height) */
   .in-content-ad {
-    margin: 12px 0;
+    margin: 8px 0;
     padding: 2px 0;
   }
 
-  .in-content-ad-link img {
+  .in-content-ad-image {
     width: 100% !important;
     height: auto !important;
-    max-height: none !important;
-    min-height: auto !important;
+    max-height: 150px !important;
+    min-height: 40px !important;
     object-fit: contain !important;
+  }
+
+  .ad-inline .in-content-ad-image {
+    max-height: 120px !important;
+    min-height: 30px !important;
   }
 
   .in-content-ad .ad-label {
@@ -883,13 +1190,48 @@
     font-size: 0.75rem;
   }
 
-  /* ✅ Header Ad - Small Mobile (full width, natural height) */
-  .ad-header-top .in-content-ad-link img {
+  /* ✅ Header Ad - Small Mobile */
+  .ad-header-top .in-content-ad-image {
     width: 100% !important;
     height: auto !important;
-    max-height: none !important;
-    min-height: auto !important;
+    max-height: 150px !important;
+    min-height: 40px !important;
     object-fit: contain !important;
+  }
+
+  /* ✅ Footer Ad - Small Mobile */
+  .ad-content-end .in-content-ad-image {
+    max-height: 150px !important;
+    min-height: 40px !important;
+  }
+
+  /* ✅ Between Paragraphs - Small Mobile */
+  .ad-between-paragraphs .in-content-ad-image {
+    max-height: 130px !important;
+    min-height: 30px !important;
+  }
+
+  /* Heading and list adjustments */
+  .article-heading {
+    margin: 0.75rem 0 0.4rem;
+  }
+
+  h1.article-heading {
+    font-size: 1.1rem;
+  }
+
+  h2.article-heading {
+    font-size: 1rem;
+  }
+
+  h3.article-heading {
+    font-size: 0.95rem;
+  }
+
+  .article-list {
+    padding-left: 1rem;
+    font-size: 0.85rem;
+    line-height: 1.5;
   }
 }
 
@@ -900,7 +1242,10 @@
   .protected-text,
   .article-content,
   .article-paragraph,
-  .in-content-ad {
+  .in-content-ad,
+  .article-list-wrapper,
+  .article-list,
+  .article-heading {
     -webkit-touch-callout: none !important;
     -webkit-user-select: none !important;
     user-select: none !important;
@@ -910,7 +1255,6 @@
 
 /* ===== PRINT OVERRIDES ===== */
 @media print {
-  .image-protection-badge,
   .image-protection-layer {
     display: none !important;
   }
@@ -924,7 +1268,10 @@
   .protected-text,
   .protected-text *,
   .article-paragraph,
-  .article-content * {
+  .article-content *,
+  .article-list-wrapper,
+  .article-list,
+  .article-heading {
     -webkit-user-select: auto !important;
     user-select: auto !important;
   }
@@ -947,7 +1294,10 @@
 @media speech {
   .protected-text,
   .protected-text *,
-  .article-paragraph {
+  .article-paragraph,
+  .article-list-wrapper,
+  .article-list,
+  .article-heading {
     user-select: auto !important;
     -webkit-user-select: auto !important;
   }

@@ -249,6 +249,306 @@ const InContentAd = ({ position = 'mid-content', className = '' }) => {
   );
 };
 
+// ─── Helper: Split content into blocks (handles lists, headings, paragraphs) ──────
+const splitIntoBlocks = (content) => {
+  if (!content) return [];
+  
+  // Split by newlines
+  const lines = content.split('\n');
+  const blocks = [];
+  let currentBlock = '';
+  let inList = false;
+  let listType = null; // 'ordered' or 'unordered'
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    
+    // Skip empty lines
+    if (!trimmed) {
+      if (currentBlock) {
+        blocks.push(currentBlock);
+        currentBlock = '';
+        inList = false;
+        listType = null;
+      }
+      continue;
+    }
+    
+    // Check if this is a list item
+    const isOrderedListItem = /^\d+\.\s/.test(trimmed);
+    const isUnorderedListItem = /^[-*•]\s/.test(trimmed);
+    const isListItem = isOrderedListItem || isUnorderedListItem;
+    
+    // Check if this is a heading
+    const isHeading = /^#{1,6}\s/.test(trimmed);
+    
+    if (isListItem) {
+      // If we were building a non-list block, push it
+      if (currentBlock && !inList) {
+        blocks.push(currentBlock);
+        currentBlock = '';
+      }
+      
+      // Start or continue a list
+      if (!inList) {
+        inList = true;
+        listType = isOrderedListItem ? 'ordered' : 'unordered';
+        currentBlock = trimmed;
+      } else {
+        // Continue the list
+        currentBlock += '\n' + trimmed;
+      }
+    } else if (isHeading) {
+      // Push any existing block
+      if (currentBlock) {
+        blocks.push(currentBlock);
+        currentBlock = '';
+      }
+      inList = false;
+      listType = null;
+      // Headings get their own block
+      blocks.push(trimmed);
+    } else {
+      // Regular paragraph text
+      if (inList) {
+        // If we were in a list, push the list first
+        if (currentBlock) {
+          blocks.push(currentBlock);
+          currentBlock = '';
+        }
+        inList = false;
+        listType = null;
+        currentBlock = trimmed;
+      } else {
+        // Continue building paragraph
+        if (currentBlock) {
+          currentBlock += ' ' + trimmed;
+        } else {
+          currentBlock = trimmed;
+        }
+      }
+    }
+  }
+  
+  // Push any remaining block
+  if (currentBlock) {
+    blocks.push(currentBlock);
+  }
+  
+  return blocks;
+};
+
+// ─── Helper: Check if a block is a list ──────────────────────
+const isListBlock = (block) => {
+  const lines = block.split('\n').filter(l => l.trim());
+  if (lines.length === 0) return false;
+  
+  const firstLine = lines[0].trim();
+  return /^\d+\.\s/.test(firstLine) || /^[-*•]\s/.test(firstLine);
+};
+
+// ─── Helper: Check if a block is a heading ────────────────────
+const isHeadingBlock = (block) => {
+  return /^#{1,6}\s/.test(block.trim());
+};
+
+// ─── Helper: Render list block ────────────────────────────────
+const renderListBlock = (block, key) => {
+  const lines = block.split('\n').filter(item => item.trim());
+  if (lines.length === 0) return null;
+  
+  const firstLine = lines[0].trim();
+  const isOrdered = /^\d+\.\s/.test(firstLine);
+  
+  const listItems = lines.map((item, idx) => {
+    // Remove the list marker (number or bullet)
+    let text = item.trim();
+    if (isOrdered) {
+      text = text.replace(/^\d+\.\s*/, '');
+    } else {
+      text = text.replace(/^[-*•]\s*/, '');
+    }
+    return <li key={`${key}-li-${idx}`} dangerouslySetInnerHTML={{ __html: text }} />;
+  });
+  
+  return (
+    <div key={key} className="article-list-wrapper">
+      {isOrdered ? (
+        <ol className="article-list ordered">{listItems}</ol>
+      ) : (
+        <ul className="article-list unordered">{listItems}</ul>
+      )}
+    </div>
+  );
+};
+
+// ─── Helper: Render heading block ─────────────────────────────
+const renderHeadingBlock = (block, key) => {
+  const trimmed = block.trim();
+  const match = trimmed.match(/^(#{1,6})\s(.+)/);
+  if (!match) return null;
+  
+  const level = match[1].length;
+  const text = match[2];
+  const HeadingTag = `h${Math.min(level, 6)}`;
+  
+  return React.createElement(
+    HeadingTag,
+    { key: key, className: 'article-heading' },
+    text
+  );
+};
+
+// ─── Helper: Render content with ads inside blocks ──────────
+const renderContentWithInlineAds = (content, adPositions = []) => {
+  if (!content) {
+    return <p>No content available</p>;
+  }
+
+  // Get blocks of content
+  const blocks = splitIntoBlocks(content);
+
+  if (blocks.length === 0) {
+    return <div dangerouslySetInnerHTML={{ __html: content }} />;
+  }
+
+  const elements = [];
+  let adIndex = 0;
+  let renderedBlockCount = 0;
+
+  // Process each block
+  blocks.forEach((block, blockIndex) => {
+    const trimmed = block.trim();
+    if (!trimmed) return;
+
+    const isHeading = isHeadingBlock(trimmed);
+    const isList = isListBlock(trimmed);
+
+    // Determine if this block should have an ad
+    const shouldHaveAd = adPositions.includes(renderedBlockCount);
+
+    if (isHeading) {
+      // Render heading
+      elements.push(renderHeadingBlock(trimmed, `heading-${blockIndex}`));
+      renderedBlockCount++;
+    } else if (isList) {
+      // Render list
+      elements.push(renderListBlock(trimmed, `list-${blockIndex}`));
+      renderedBlockCount++;
+    } else {
+      // Regular paragraph
+      const isLongParagraph = trimmed.length > 100;
+      
+      if (shouldHaveAd && isLongParagraph) {
+        // Split paragraph into two parts for ad insertion
+        // Try to split by sentences first
+        let sentences = trimmed.match(/[^.!?]+[.!?]+/g);
+        
+        if (!sentences || sentences.length < 2) {
+          // If no sentences found or only one sentence, split by words
+          const words = trimmed.split(' ');
+          if (words.length > 10) {
+            const midPoint = Math.floor(words.length * 0.5);
+            const firstHalf = words.slice(0, midPoint).join(' ');
+            const secondHalf = words.slice(midPoint).join(' ');
+            
+            // Render first half
+            elements.push(
+              <div key={`p-${blockIndex}-start`} className="article-paragraph">
+                <span dangerouslySetInnerHTML={{ __html: firstHalf }} />
+              </div>
+            );
+            
+            // Insert ad
+            elements.push(
+              <InContentAd
+                key={`ad-inline-${blockIndex}-${adIndex}`}
+                position="inline"
+                className="ad-inline"
+              />
+            );
+            adIndex++;
+            
+            // Render second half
+            elements.push(
+              <div key={`p-${blockIndex}-end`} className="article-paragraph">
+                <span dangerouslySetInnerHTML={{ __html: secondHalf }} />
+              </div>
+            );
+          } else {
+            // Too short, render full paragraph
+            elements.push(
+              <div key={`p-${blockIndex}`} className="article-paragraph">
+                <span dangerouslySetInnerHTML={{ __html: trimmed }} />
+              </div>
+            );
+          }
+        } else {
+          // Split by sentences
+          const breakIndex = Math.floor(sentences.length * 0.5);
+          const firstHalf = sentences.slice(0, breakIndex).join(' ');
+          const secondHalf = sentences.slice(breakIndex).join(' ');
+          
+          // Render first half
+          elements.push(
+            <div key={`p-${blockIndex}-start`} className="article-paragraph">
+              <span dangerouslySetInnerHTML={{ __html: firstHalf }} />
+            </div>
+          );
+          
+          // Insert ad
+          elements.push(
+            <InContentAd
+              key={`ad-inline-${blockIndex}-${adIndex}`}
+              position="inline"
+              className="ad-inline"
+            />
+          );
+          adIndex++;
+          
+          // Render second half
+          elements.push(
+            <div key={`p-${blockIndex}-end`} className="article-paragraph">
+              <span dangerouslySetInnerHTML={{ __html: secondHalf }} />
+            </div>
+          );
+        }
+      } else {
+        // Regular paragraph without inline ad
+        elements.push(
+          <div key={`p-${blockIndex}`} className="article-paragraph">
+            <span dangerouslySetInnerHTML={{ __html: trimmed }} />
+          </div>
+        );
+        
+        // Add small ad between some blocks
+        if (renderedBlockCount % 3 === 2 && renderedBlockCount < blocks.length - 1) {
+          elements.push(
+            <InContentAd
+              key={`ad-between-${blockIndex}`}
+              position="mid-content"
+              className="ad-between-paragraphs"
+            />
+          );
+        }
+      }
+      renderedBlockCount++;
+    }
+  });
+
+  // Add footer ad at the end
+  elements.push(
+    <InContentAd
+      key="ad-end"
+      position="footer"
+      className="ad-content-end"
+    />
+  );
+
+  return elements;
+};
+
 // ─── Main Component ────────────────────────────────────────────
 const NewsView = () => {
   const { id } = useParams();
@@ -265,6 +565,7 @@ const NewsView = () => {
         console.log('=== FETCHED NEWS ===');
         console.log('ID:', data.id);
         console.log('Title:', data.title);
+        console.log('Content length:', data.content ? data.content.length : 0);
         console.log('Image exists:', !!data.image);
         if (data.image) {
           console.log('Image length:', data.image.length);
@@ -282,70 +583,21 @@ const NewsView = () => {
   }, [id]);
 
   // ─── Render content with ads ──────────────────────────────────
-  const renderContentWithAds = () => {
+  const renderContent = () => {
     if (!news || !news.content) {
       return <p>No content available</p>;
     }
 
-    const paragraphs = news.content.split('\n\n').filter(p => p.trim());
-
-    if (paragraphs.length === 0) {
-      return <div dangerouslySetInnerHTML={{ __html: news.content }} />;
-    }
-
-    const elements = [];
-
-    // ─── First paragraph ──────────────────────────────────────────
-    elements.push(
-      <div key="p-0" className="article-paragraph"
-        dangerouslySetInnerHTML={{ __html: paragraphs[0] }}
-      />
-    );
-
-    // ─── Ad after first paragraph ──────────────────────────────────
-    elements.push(
-      <InContentAd
-        key="ad-after-p1"
-        position="mid-content"
-        className="ad-after-paragraph"
-      />
-    );
-
-    // ─── Middle paragraphs with ads ─────────────────────────────
-    for (let i = 1; i < paragraphs.length; i++) {
-      elements.push(
-        <div
-          key={`p-${i}`}
-          className="article-paragraph"
-          dangerouslySetInnerHTML={{ __html: paragraphs[i] }}
-        />
-      );
-
-      if ((i) % 2 === 0 && i < paragraphs.length - 1) {
-        elements.push(
-          <InContentAd
-            key={`ad-after-p${i}`}
-            position="mid-content"
-            className="ad-between-paragraphs"
-          />
-        );
-      }
-    }
-
-    // ─── Ad at the end ─────────────────────────────────────
-    elements.push(
-      <InContentAd
-        key="ad-end"
-        position="footer"
-        className="ad-content-end"
-      />
-    );
-
-    return elements;
+    // Specify which blocks should have inline ads (by rendered block index)
+    // Blocks include: paragraphs, lists, headings
+    // For example: insert ads in blocks 1, 3, 5, 7 (0-indexed)
+    const inlineAdPositions = [1, 3, 5, 7, 9];
+    
+    return renderContentWithInlineAds(news.content, inlineAdPositions);
   };
 
   // ============================================================
-  // PROTECTION: Disable right-click on entire article (silent)
+  // PROTECTION: Disable right-click on entire article
   // ============================================================
   const handleContextMenu = (e) => {
     e.preventDefault();
@@ -617,9 +869,9 @@ const NewsView = () => {
         <h1 className="article-title">{news.title}</h1>
         {news.subtitle && <h2 className="article-subtitle">{news.subtitle}</h2>}
 
-        {/* ✅ Content with Ads inserted */}
+        {/* ✅ Content with Ads inserted INSIDE paragraphs */}
         <div className="article-content protected-text">
-          {renderContentWithAds()}
+          {renderContent()}
         </div>
 
         {news.tags && (

@@ -178,12 +178,12 @@ body {
 /* ─── Layout ─────────────────────────────────────────────────── */
 .app-container { min-height: 100vh; }
 
-/* ✅ Header Ad Wrapper - Above everything */
+/* ✅ Header Ad Wrapper - FULL WIDTH (No left/right padding, NO MARGINS) */
 .header-ad-wrapper {
-  max-width: 1320px;
-  margin: 0 auto;
-  padding: 16px 16px 0 16px;
   width: 100%;
+  max-width: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .main-layout {
@@ -423,27 +423,44 @@ body {
   font-family: var(--font-sans);
 }
 
-/* ─── ✅ Header Ad (Full Width, Full Image, ABOVE EVERYTHING) ─ */
+/* ─── ✅ Header Ad - FULL WIDTH (No margins, no padding) ──── */
 .header-ad-wrapper .real-ad-container {
+  width: 100%;
   max-width: 100%;
-  margin: 0;
-  padding: 0;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 .header-ad-wrapper .real-ad-link {
   border-radius: 0 !important;
-  border: 1px solid var(--border);
+  border: none !important;
+  border-bottom: 1px solid var(--border) !important;
   min-height: auto;
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.header-ad-wrapper .real-ad-link:hover {
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .header-ad-wrapper .real-ad-image {
-  width: 100%;
+  width: 100% !important;
   height: auto !important;
   max-height: none !important;
   min-height: auto !important;
   object-fit: contain !important;
   border-radius: 0 !important;
   display: block;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 /* ─── ✅ Mid Content Ad (Full Width, Full Image) ───────────── */
@@ -531,6 +548,81 @@ body {
   object-fit: contain !important;
   border-radius: 0 !important;
   display: block;
+}
+
+/* ==============================================================
+   ✅ DESKTOP - REDUCED SIZE FOR FOOTER & CONTENT ADS
+   ============================================================== */
+@media (min-width: 1024px) {
+  /* Header ad - full width with no limits */
+  .header-ad-wrapper {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .header-ad-wrapper .real-ad-link {
+    border-radius: 0 !important;
+    border: none !important;
+    border-bottom: 1px solid var(--border) !important;
+    min-height: auto;
+    overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  .header-ad-wrapper .real-ad-link:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  .header-ad-wrapper .real-ad-image {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: 600px !important;
+    min-height: 250px !important;
+    object-fit: contain !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+  }
+
+  /* ✅ Mid Content Ad - Reduced size on desktop */
+  .mid-ad .real-ad-image {
+    max-height: 300px !important;
+    min-height: 150px !important;
+    width: 100% !important;
+    object-fit: contain !important;
+  }
+
+  .mid-ad .real-ad-link {
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  /* ✅ Footer Ad - Reduced size on desktop */
+  .footer-ad-wrapper .real-ad-image {
+    max-height: 300px !important;
+    min-height: 150px !important;
+    width: 100% !important;
+    object-fit: contain !important;
+  }
+
+  .footer-ad-wrapper .real-ad-link {
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  /* ✅ Sidebar Ad - Keep as is or adjust */
+  .sidebar-ad .real-ad-image {
+    max-height: 280px !important;
+    min-height: 120px !important;
+  }
 }
 
 /* ─── Breaking Ticker ────────────────────────────────────────── */
@@ -826,22 +918,34 @@ body {
 .mt-2 { margin-top: 6px; }
 .error { color: #dc2626; text-align: center; padding: 40px; }
 
-/* ─── ✅ Responsive Mobile Fixes ───────────────────────────────── */
+/* ─── ✅ Responsive Mobile Fixes ────────────────────────────── */
 @media (max-width: 768px) {
+  /* ✅ Header Ad - Mobile (full width, no margins, no padding) */
   .header-ad-wrapper {
-    padding: 10px 10px 0 10px;
+    padding: 0 !important;
+    margin: 0 !important;
   }
 
-  /* ✅ Header Ad - Mobile */
   .header-ad-wrapper .real-ad-link {
     border-radius: 0 !important;
     min-height: auto;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  .header-ad-wrapper .real-ad-link:hover {
+    transform: none !important;
+    box-shadow: none !important;
   }
 
   .header-ad-wrapper .real-ad-image {
     max-height: none !important;
     min-height: auto !important;
     object-fit: contain !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   /* ✅ Mid Content Ad - Mobile */
@@ -905,8 +1009,32 @@ body {
 }
 
 @media (max-width: 480px) {
+  /* ✅ Header Ad - Small Mobile (no margins, no padding) */
   .header-ad-wrapper {
-    padding: 8px 8px 0 8px;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .header-ad-wrapper .real-ad-link {
+    border-radius: 0 !important;
+    min-height: auto;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  .header-ad-wrapper .real-ad-link:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  .header-ad-wrapper .real-ad-image {
+    max-height: none !important;
+    min-height: auto !important;
+    object-fit: contain !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   /* ✅ Sidebar - Small Mobile */
