@@ -1,11 +1,255 @@
 // src/components/pages/NewsView.jsx
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { getNewsById } from '../../api/news';
+import { getNewsById, getAdsByPosition, recordAdView, recordAdClick } from '../../api/news';
 import { getImageSrc } from '../../utils/imageUtils';
 import { ArrowLeft, Calendar, Clock, Image as ImageIcon } from 'lucide-react';
 import './NewsView.css';
 
+// ─── Ad Component for In-Content ──────────────────────────────
+const InContentAd = ({ position = 'mid-content', className = '' }) => {
+  const [ads, setAds] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const loadAds = async () => {
+      try {
+        console.log(`📢 NewsView: Fetching ads for position: ${position}`);
+        const data = await getAdsByPosition(position);
+        console.log(`📢 NewsView: Ads response for ${position}:`, data);
+        console.log(`📢 NewsView: Ads count for ${position}:`, data ? data.length : 0);
+
+        if (data && data.length > 0) {
+          data.forEach((ad, index) => {
+            console.log(`📢 Ad ${index + 1} for ${position}:`, {
+              id: ad.id,
+              title: ad.title,
+              imageUrl: ad.imageUrl ? ad.imageUrl.substring(0, 50) + '...' : 'No image',
+              linkUrl: ad.linkUrl,
+            });
+          });
+          setAds(data);
+          if (data[0].id) {
+            recordAdView(data[0].id);
+          }
+        } else {
+          console.log(`⚠️ NewsView: No ads found for position: ${position}`);
+        }
+      } catch (error) {
+        console.error(`❌ NewsView: Error loading ads for ${position}:`, error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadAds();
+  }, [position]);
+
+  useEffect(() => {
+    if (ads.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentIndex((prev) => {
+          const newIndex = (prev + 1) % ads.length;
+          if (ads[newIndex]?.id) {
+            recordAdView(ads[newIndex].id);
+          }
+          return newIndex;
+        });
+      }, 8000);
+      return () => clearInterval(interval);
+    }
+  }, [ads]);
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className={`in-content-ad ${className}`}>
+        <div className="ad-label">— {position === 'header' ? 'ADVERTISEMENT' : 'SPONSORED'} —</div>
+        <div className="in-content-ad-link" style={{
+          backgroundColor: '#f8fafc',
+          border: position === 'header' ? 'none' : '1px solid #e2e8f0',
+          borderBottom: position === 'header' ? '1px solid #e2e8f0' : '1px solid #e2e8f0',
+          borderRadius: position === 'header' ? '0' : '12px',
+          padding: '20px',
+          textAlign: 'center',
+          minHeight: position === 'header' ? '60px' : '100px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#94a3b8',
+          fontSize: '14px'
+        }}>
+          Loading ad...
+        </div>
+      </div>
+    );
+  }
+
+  // Don't show anything if no ads (silent fail for header, show placeholder for others)
+  if (ads.length === 0) {
+    if (position === 'header') {
+      return null;
+    }
+    return (
+      <div className={`in-content-ad ${className}`}>
+        <div className="ad-label">— SPONSORED —</div>
+        <div className="in-content-ad-link" style={{
+          backgroundColor: '#f8fafc',
+          border: '1px solid #e2e8f0',
+          borderRadius: '12px',
+          padding: '20px',
+          textAlign: 'center',
+          minHeight: '100px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#94a3b8',
+          fontSize: '14px'
+        }}>
+          Ad space available
+        </div>
+      </div>
+    );
+  }
+
+  const ad = ads[currentIndex];
+
+  const handleAdClick = (e) => {
+    if (ad.id) {
+      recordAdClick(ad.id);
+    }
+    if (!ad.linkUrl) {
+      e.preventDefault();
+    }
+  };
+
+  // ✅ Get image source - handle both base64 and URLs
+  const getAdImageSrc = (image) => {
+    if (!image) return null;
+
+    if (image.startsWith('data:') || image.startsWith('http://') || image.startsWith('https://')) {
+      return image;
+    }
+
+    try {
+      const src = getImageSrc(image);
+      return src || null;
+    } catch (error) {
+      console.error('Error getting image src:', error);
+      return null;
+    }
+  };
+
+  const imageSrc = getAdImageSrc(ad.imageUrl);
+
+  console.log(`📢 Rendering ad for ${position}:`, {
+    title: ad.title,
+    hasImage: !!imageSrc,
+    imageSrc: imageSrc ? imageSrc.substring(0, 50) + '...' : 'No image',
+    linkUrl: ad.linkUrl
+  });
+
+  const isHeader = position === 'header';
+
+  return (
+    <div className={`in-content-ad ${className}`}>
+      <div className="ad-label">— {isHeader ? 'ADVERTISEMENT' : 'SPONSORED'} —</div>
+      <a
+        href={ad.linkUrl || '#'}
+        target={ad.linkUrl ? '_blank' : '_self'}
+        rel="noopener noreferrer"
+        onClick={handleAdClick}
+        className="in-content-ad-link"
+        style={{
+          backgroundColor: ad.backgroundColor || '#ffffff',
+          border: isHeader ? 'none' : `1px solid ${ad.borderColor || '#e2e8f0'}`,
+          borderBottom: isHeader ? '1px solid #e2e8f0' : `1px solid ${ad.borderColor || '#e2e8f0'}`,
+          borderRadius: isHeader ? '0' : '12px',
+          overflow: 'hidden',
+          display: 'block',
+          transition: 'all 0.3s ease',
+          textDecoration: 'none',
+          width: '100%',
+          padding: isHeader ? '0' : '0',
+        }}
+      >
+        {imageSrc ? (
+          <img
+            src={imageSrc}
+            alt={ad.altText || ad.title || 'Advertisement'}
+            style={{
+              width: '100%',
+              height: 'auto',
+              display: 'block',
+              objectFit: 'contain',
+            }}
+            onError={(e) => {
+              console.error('❌ Ad image failed to load:', imageSrc);
+              e.target.style.display = 'none';
+              const parent = e.target.parentElement;
+              if (parent) {
+                const fallback = document.createElement('div');
+                fallback.style.cssText = `
+                  padding: 20px;
+                  text-align: center;
+                  min-height: 100px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  flex-direction: column;
+                  width: 100%;
+                `;
+                fallback.innerHTML = `
+                  <h4 style="margin:0;color:#0f172a;font-size:16px;">${ad.title || 'Advertisement'}</h4>
+                  ${ad.description ? `<p style="margin:8px 0 0;color:#64748b;font-size:14px;">${ad.description}</p>` : ''}
+                `;
+                parent.appendChild(fallback);
+              }
+            }}
+          />
+        ) : (
+          <div style={{
+            padding: '20px',
+            textAlign: 'center',
+            minHeight: '100px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'column',
+            width: '100%',
+          }}>
+            <h4 style={{ margin: 0, color: '#0f172a', fontSize: '16px' }}>{ad.title || 'Advertisement'}</h4>
+          </div>
+        )}
+        {ads.length > 1 && !isHeader && (
+          <div className="ad-dots" style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '6px',
+            padding: '8px 0',
+            background: '#f8fafc'
+          }}>
+            {ads.map((_, idx) => (
+              <span
+                key={idx}
+                style={{
+                  width: idx === currentIndex ? '16px' : '8px',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: idx === currentIndex ? '#6C63FF' : '#e2e8f0',
+                  transition: 'all 0.3s ease',
+                  display: 'inline-block',
+                }}
+              />
+            ))}
+          </div>
+        )}
+      </a>
+    </div>
+  );
+};
+
+// ─── Main Component ────────────────────────────────────────────
 const NewsView = () => {
   const { id } = useParams();
   const [news, setNews] = useState(null);
@@ -37,6 +281,69 @@ const NewsView = () => {
       });
   }, [id]);
 
+  // ─── Render content with ads ──────────────────────────────────
+  const renderContentWithAds = () => {
+    if (!news || !news.content) {
+      return <p>No content available</p>;
+    }
+
+    const paragraphs = news.content.split('\n\n').filter(p => p.trim());
+
+    if (paragraphs.length === 0) {
+      return <div dangerouslySetInnerHTML={{ __html: news.content }} />;
+    }
+
+    const elements = [];
+
+    // ─── First paragraph ──────────────────────────────────────────
+    elements.push(
+      <div key="p-0" className="article-paragraph"
+        dangerouslySetInnerHTML={{ __html: paragraphs[0] }}
+      />
+    );
+
+    // ─── Ad after first paragraph ──────────────────────────────────
+    elements.push(
+      <InContentAd
+        key="ad-after-p1"
+        position="mid-content"
+        className="ad-after-paragraph"
+      />
+    );
+
+    // ─── Middle paragraphs with ads ─────────────────────────────
+    for (let i = 1; i < paragraphs.length; i++) {
+      elements.push(
+        <div
+          key={`p-${i}`}
+          className="article-paragraph"
+          dangerouslySetInnerHTML={{ __html: paragraphs[i] }}
+        />
+      );
+
+      if ((i) % 2 === 0 && i < paragraphs.length - 1) {
+        elements.push(
+          <InContentAd
+            key={`ad-after-p${i}`}
+            position="mid-content"
+            className="ad-between-paragraphs"
+          />
+        );
+      }
+    }
+
+    // ─── Ad at the end ─────────────────────────────────────
+    elements.push(
+      <InContentAd
+        key="ad-end"
+        position="footer"
+        className="ad-content-end"
+      />
+    );
+
+    return elements;
+  };
+
   // ============================================================
   // PROTECTION: Disable right-click on entire article (silent)
   // ============================================================
@@ -46,42 +353,34 @@ const NewsView = () => {
     return false;
   };
 
-  // ============================================================
-  // PROTECTION: Disable keyboard shortcuts (silent)
-  // ============================================================
   const handleKeyDown = (e) => {
-    // Prevent Ctrl+C, Ctrl+S, Ctrl+P, Ctrl+U, Ctrl+Shift+I, F12
     if (
-      (e.ctrlKey || e.metaKey) && 
+      (e.ctrlKey || e.metaKey) &&
       ['c', 'C', 's', 'S', 'p', 'P', 'u', 'U', 'i', 'I'].includes(e.key)
     ) {
       e.preventDefault();
       e.stopPropagation();
       return false;
     }
-    
-    // Prevent F12 (DevTools)
+
     if (e.key === 'F12') {
       e.preventDefault();
       e.stopPropagation();
       return false;
     }
 
-    // Prevent Ctrl+Shift+I (DevTools)
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'i' || e.key === 'I')) {
       e.preventDefault();
       e.stopPropagation();
       return false;
     }
 
-    // Prevent Ctrl+Shift+J (DevTools Console)
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'j' || e.key === 'J')) {
       e.preventDefault();
       e.stopPropagation();
       return false;
     }
 
-    // Prevent Ctrl+U (View Source)
     if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.key === 'U')) {
       e.preventDefault();
       e.stopPropagation();
@@ -89,11 +388,7 @@ const NewsView = () => {
     }
   };
 
-  // ============================================================
-  // PROTECTION: Disable text selection (silent)
-  // ============================================================
   const handleSelectStart = (e) => {
-    // Allow selection on share buttons and back link
     if (e.target.closest('.share-btn') || e.target.closest('.back-link')) {
       return true;
     }
@@ -101,11 +396,7 @@ const NewsView = () => {
     return false;
   };
 
-  // ============================================================
-  // PROTECTION: Disable copy (silent)
-  // ============================================================
   const handleCopy = (e) => {
-    // Allow copy on share buttons and back link
     if (e.target.closest('.share-btn') || e.target.closest('.back-link')) {
       return true;
     }
@@ -114,45 +405,30 @@ const NewsView = () => {
     return false;
   };
 
-  // ============================================================
-  // PROTECTION: Disable cut (silent)
-  // ============================================================
   const handleCut = (e) => {
     e.preventDefault();
     e.stopPropagation();
     return false;
   };
 
-  // ============================================================
-  // PROTECTION: Disable paste (silent)
-  // ============================================================
   const handlePaste = (e) => {
     e.preventDefault();
     e.stopPropagation();
     return false;
   };
 
-  // ============================================================
-  // PROTECTION: Disable drag (silent)
-  // ============================================================
   const handleDrag = (e) => {
     e.preventDefault();
     e.stopPropagation();
     return false;
   };
 
-  // ============================================================
-  // PROTECTION: Disable drop (silent)
-  // ============================================================
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
     return false;
   };
 
-  // ============================================================
-  // PROTECTION: Disable image interactions (silent)
-  // ============================================================
   const handleImageContextMenu = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -169,19 +445,13 @@ const NewsView = () => {
     setIsImageLoaded(true);
   };
 
-  // ============================================================
-  // PROTECTION: Disable touch events on mobile (silent)
-  // ============================================================
   const handleTouchStart = (e) => {
     const target = e.target;
-    // Allow touch on share buttons and back link
     if (target.closest('.share-btn') || target.closest('.back-link')) {
       return true;
     }
-    
-    // Block long press on images and text
+
     if (target.tagName === 'IMG' || target.closest('.protected-content')) {
-      // Only block if it's a long press (touch > 500ms)
       const touchStartTime = Date.now();
       const timer = setTimeout(() => {
         const touchEndTime = Date.now();
@@ -189,7 +459,7 @@ const NewsView = () => {
           e.preventDefault();
         }
       }, 500);
-      
+
       target._touchTimer = timer;
     }
   };
@@ -203,16 +473,12 @@ const NewsView = () => {
   };
 
   const handleTouchMove = (e) => {
-    // Block touch move on images
     if (e.target.tagName === 'IMG' || e.target.closest('.protected-content')) {
       e.preventDefault();
       return false;
     }
   };
 
-  // ============================================================
-  // PROTECTION: Disable double click selection (silent)
-  // ============================================================
   const handleDoubleClick = (e) => {
     if (!e.target.closest('.share-btn') && !e.target.closest('.back-link')) {
       e.preventDefault();
@@ -250,7 +516,7 @@ const NewsView = () => {
   const imageSrc = getImageSrc(news.image);
 
   return (
-    <div 
+    <div
       className="news-view-container protected-content"
       ref={articleRef}
       onContextMenu={handleContextMenu}
@@ -266,7 +532,6 @@ const NewsView = () => {
       onTouchEnd={handleTouchEnd}
       onTouchMove={handleTouchMove}
       onDoubleClick={handleDoubleClick}
-      // CSS protection
       style={{
         userSelect: 'none',
         WebkitUserSelect: 'none',
@@ -277,6 +542,14 @@ const NewsView = () => {
         touchAction: 'manipulation',
       }}
     >
+      {/* ✅ HEADER AD - Positioned ABOVE "Back to Home" link */}
+      <div className="header-ad-wrapper">
+        <InContentAd
+          position="header"
+          className="ad-header-top"
+        />
+      </div>
+
       <Link to="/" className="back-link">
         <ArrowLeft size={18} /> Back to Home
       </Link>
@@ -286,7 +559,7 @@ const NewsView = () => {
         {news.image && (
           <div className="article-image-wrapper">
             <div className="image-protection-overlay">
-              <img 
+              <img
                 ref={imageRef}
                 src={imageSrc || '/placeholder-image.jpg'}
                 alt={news.title}
@@ -309,15 +582,13 @@ const NewsView = () => {
                   touchAction: 'none',
                 }}
               />
-              {/* Protection layer - invisible but blocks all interactions */}
-              <div 
+              <div
                 className="image-protection-layer"
                 onContextMenu={handleImageContextMenu}
                 onDragStart={handleImageDrag}
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
               />
-      
             </div>
             <div className="image-overlay">
               <span className="category-badge">{news.category || 'General'}</span>
@@ -346,17 +617,10 @@ const NewsView = () => {
         <h1 className="article-title">{news.title}</h1>
         {news.subtitle && <h2 className="article-subtitle">{news.subtitle}</h2>}
 
-        <div
-          className="article-content protected-text"
-          dangerouslySetInnerHTML={{ __html: news.content }}
-          style={{
-            userSelect: 'none',
-            WebkitUserSelect: 'none',
-            MozUserSelect: 'none',
-            msUserSelect: 'none',
-            WebkitTouchCallout: 'none',
-          }}
-        />
+        {/* ✅ Content with Ads inserted */}
+        <div className="article-content protected-text">
+          {renderContentWithAds()}
+        </div>
 
         {news.tags && (
           <div className="article-tags">

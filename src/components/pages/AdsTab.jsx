@@ -645,7 +645,7 @@ const AdsTab = () => {
                   </div>
                 </div>
 
-                {/* Position & Size */}
+                {/* ✅ UPDATED: Position & Size */}
                 <div className="ads-form-group">
                   <label>Position</label>
                   <select
@@ -656,8 +656,9 @@ const AdsTab = () => {
                     <option value="sidebar">Sidebar</option>
                     <option value="footer">Footer</option>
                     <option value="featured">Featured</option>
-                    <option value="mid-content">Mid Content</option>
+                    <option value="mid-content">Mid Content (In-Article)</option>
                   </select>
+                  <small>Where this ad will appear</small>
                 </div>
 
                 <div className="ads-form-group">

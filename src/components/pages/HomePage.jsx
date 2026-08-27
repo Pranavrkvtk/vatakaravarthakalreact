@@ -112,7 +112,7 @@ const AdDisplay = ({ position, className = '' }) => {
       <div className={`real-ad-container ${className}`}>
         <div className="ad-label">— ADVERTISEMENT —</div>
         <div className="ad-loading" style={{ 
-          height: position === 'sidebar' ? '200px' : '90px', 
+          height: position === 'sidebar' ? '300px' : '180px',
           background: '#f1f5f9', 
           borderRadius: '12px',
           display: 'flex',
@@ -142,6 +142,47 @@ const AdDisplay = ({ position, className = '' }) => {
     }
   };
 
+  // ✅ Get object fit based on position (ALL use 'contain' for full image)
+  const getObjectFit = () => {
+    return 'contain'; // All ads show full image
+  };
+
+  // ✅ Get max heights for all positions
+  const getMaxHeight = () => {
+    if (position === 'sidebar') {
+      return '300px';
+    }
+    if (position === 'header') {
+      return 'auto';
+    }
+    if (position === 'mid-content') {
+      return 'auto';
+    }
+    if (position === 'footer') {
+      return 'auto';
+    }
+    return 'auto';
+  };
+
+  // ✅ Min heights for all positions
+  const getMinHeight = () => {
+    if (position === 'sidebar') {
+      return '200px';
+    }
+    return 'auto';
+  };
+
+  // ✅ Get border radius based on position
+  const getBorderRadius = () => {
+    if (position === 'footer' || position === 'header' || position === 'mid-content') {
+      return '0';
+    }
+    if (position === 'sidebar') {
+      return '0';
+    }
+    return '12px';
+  };
+
   return (
     <div className={`real-ad-container ${className}`}>
       <div className="ad-label">— ADVERTISEMENT —</div>
@@ -154,11 +195,12 @@ const AdDisplay = ({ position, className = '' }) => {
         style={{
           backgroundColor: ad.backgroundColor || '#ffffff',
           border: `1px solid ${ad.borderColor || '#e2e8f0'}`,
-          borderRadius: '12px',
+          borderRadius: getBorderRadius(),
           overflow: 'hidden',
           display: 'block',
           transition: 'all 0.3s ease',
           textDecoration: 'none',
+          width: '100%',
         }}
       >
         {ad.imageUrl ? (
@@ -170,8 +212,9 @@ const AdDisplay = ({ position, className = '' }) => {
               width: '100%',
               height: 'auto',
               display: 'block',
-              objectFit: 'contain',
-              maxHeight: position === 'sidebar' ? '250px' : '120px',
+              objectFit: getObjectFit(),
+              maxHeight: getMaxHeight(),
+              minHeight: getMinHeight(),
             }}
             onError={(e) => {
               console.error('❌ Ad image failed to load:', ad.imageUrl);
@@ -179,19 +222,28 @@ const AdDisplay = ({ position, className = '' }) => {
               const parent = e.target.parentElement;
               if (parent) {
                 parent.innerHTML = `
-                  <div style="padding:20px;text-align:center;">
-                    <h4 style="margin:0;color:#0f172a;font-size:16px;">${ad.title || 'Advertisement'}</h4>
-                    ${ad.description ? `<p style="margin:8px 0 0;color:#64748b;font-size:14px;">${ad.description}</p>` : ''}
+                  <div style="padding:20px;text-align:center;min-height:200px;display:flex;align-items:center;justify-content:center;flex-direction:column;width:100%;">
+                    <h4 style="margin:0;color:#0f172a;font-size:18px;">${ad.title || 'Advertisement'}</h4>
+                    ${ad.description ? `<p style="margin:8px 0 0;color:#64748b;font-size:15px;">${ad.description}</p>` : ''}
                   </div>
                 `;
               }
             }}
           />
         ) : (
-          <div style={{ padding: '20px', textAlign: 'center' }}>
-            <h4 style={{ margin: 0, color: '#0f172a', fontSize: '16px' }}>{ad.title || 'Advertisement'}</h4>
+          <div style={{ 
+            padding: '20px', 
+            textAlign: 'center', 
+            minHeight: '200px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'column',
+            width: '100%',
+          }}>
+            <h4 style={{ margin: 0, color: '#0f172a', fontSize: '18px' }}>{ad.title || 'Advertisement'}</h4>
             {ad.description && (
-              <p style={{ margin: '8px 0 0', color: '#64748b', fontSize: '14px' }}>{ad.description}</p>
+              <p style={{ margin: '8px 0 0', color: '#64748b', fontSize: '15px' }}>{ad.description}</p>
             )}
           </div>
         )}
@@ -200,16 +252,16 @@ const AdDisplay = ({ position, className = '' }) => {
             display: 'flex', 
             justifyContent: 'center', 
             gap: '6px', 
-            padding: '8px 0',
+            padding: '10px 0',
             background: '#f8fafc'
           }}>
             {ads.map((_, idx) => (
               <span
                 key={idx}
                 style={{
-                  width: idx === currentIndex ? '16px' : '8px',
-                  height: '8px',
-                  borderRadius: '4px',
+                  width: idx === currentIndex ? '20px' : '10px',
+                  height: '10px',
+                  borderRadius: '5px',
                   background: idx === currentIndex ? '#6C63FF' : '#e2e8f0',
                   transition: 'all 0.3s ease',
                   display: 'inline-block',
@@ -332,22 +384,11 @@ const Sidebar = ({ newsData }) => {
                     className="trending-img"
                     onError={handleImgError}
                   />
-                  {/* ✅ NUMBER BADGE REMOVED */}
                 </div>
                 <div className="trending-item-content">
                   <h4 className="trending-item-title">{currentTrendingItem.title}</h4>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
                     <DateLine date={formatDate(currentTrendingItem)} />
-                    <span style={{ 
-                      fontSize: 11, 
-                      color: '#f59e0b',
-                      fontWeight: 600,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 3
-                    }}>
-                    
-                    </span>
                   </div>
                 </div>
               </div>
@@ -433,7 +474,7 @@ const BreakingTicker = ({ newsData }) => {
 };
 
 // ================================================================
-// AdBanner Component - Header Ad
+// ✅ AdBanner Component - Header Ad (Full Width, Full Image)
 // ================================================================
 const AdBanner = () => {
   return (
@@ -444,7 +485,7 @@ const AdBanner = () => {
 };
 
 // ================================================================
-// MidAd Component - Mid Content Ad
+// ✅ MidAd Component - Mid Content Ad (Full Width, Full Image)
 // ================================================================
 const MidAd = () => {
   return (
@@ -455,11 +496,11 @@ const MidAd = () => {
 };
 
 // ================================================================
-// FooterAd Component - Footer Ad
+// ✅ FooterAd Component - Footer Ad (Full Width, Full Image)
 // ================================================================
 const FooterAd = () => {
   return (
-    <div className="footer-ad">
+    <div className="footer-ad-wrapper">
       <AdDisplay position="footer" className="footer-ad-display" />
     </div>
   );
@@ -576,10 +617,14 @@ const HomePage = () => {
 
   return (
     <div className="app-container">
+      {/* ✅ Header Ad - Positioned ABOVE everything */}
+      <div className="header-ad-wrapper">
+        <AdBanner />
+      </div>
+      
       <main className="main-layout">
         <Sidebar newsData={newsData} />
         <div className="main-content">
-          <AdBanner />
           <BreakingTicker newsData={newsData} />
           <MidAd />
           <NewsGrid newsData={newsData} />

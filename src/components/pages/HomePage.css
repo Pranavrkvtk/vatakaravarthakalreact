@@ -178,10 +178,18 @@ body {
 /* ─── Layout ─────────────────────────────────────────────────── */
 .app-container { min-height: 100vh; }
 
+/* ✅ Header Ad Wrapper - Above everything */
+.header-ad-wrapper {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 16px 16px 0 16px;
+  width: 100%;
+}
+
 .main-layout {
   max-width: 1320px;
   margin: 0 auto;
-  padding: 28px 16px 48px;
+  padding: 20px 16px 48px;
   display: flex;
   flex-direction: column;
   gap: 28px;
@@ -333,22 +341,6 @@ body {
   font-size: 0;
 }
 
-/* ─── Sidebar Ad ────────────────────────────────────────────────── */
-.sidebar-ad {
-  padding: 12px 14px;
-  border-top: 1px solid var(--border-dim);
-}
-
-.sidebar-ad .ad-label {
-  font-size: 0.58rem;
-  color: var(--ink-3);
-  text-align: center;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  margin-bottom: 8px;
-  font-family: var(--font-sans);
-}
-
 /* ─── Real Ad Container ──────────────────────────────────────── */
 .real-ad-container {
   width: 100%;
@@ -357,10 +349,10 @@ body {
 
 .real-ad-link {
   display: block;
-  border-radius: var(--radius-md);
   overflow: hidden;
   transition: all 0.3s ease;
   text-decoration: none;
+  width: 100%;
 }
 
 .real-ad-link:hover {
@@ -371,8 +363,6 @@ body {
 .real-ad-image {
   width: 100%;
   height: auto;
-  max-height: 250px;
-  object-fit: contain;
   display: block;
   background: #fff;
 }
@@ -418,58 +408,129 @@ body {
   border-radius: 4px;
 }
 
-/* ─── Header Ad Banner ───────────────────────────────────────── */
-.ad-banner-wrapper {
+/* ==============================================================
+   ✅ ALL ADS - FULL WIDTH WITH FULL IMAGE (No Crop)
+   ============================================================== */
+
+/* ─── Ad Label (Global) ──────────────────────────────────────── */
+.ad-label {
+  font-size: 0.58rem;
+  color: var(--ink-3);
+  text-align: center;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  font-family: var(--font-sans);
+}
+
+/* ─── ✅ Header Ad (Full Width, Full Image, ABOVE EVERYTHING) ─ */
+.header-ad-wrapper .real-ad-container {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.header-ad-wrapper .real-ad-link {
+  border-radius: 0 !important;
+  border: 1px solid var(--border);
+  min-height: auto;
+}
+
+.header-ad-wrapper .real-ad-image {
   width: 100%;
+  height: auto !important;
+  max-height: none !important;
+  min-height: auto !important;
+  object-fit: contain !important;
+  border-radius: 0 !important;
+  display: block;
 }
 
-.ad-banner-wrapper .real-ad-link {
-  max-height: 120px;
+/* ─── ✅ Mid Content Ad (Full Width, Full Image) ───────────── */
+.mid-ad {
+  width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
-.ad-banner-wrapper .real-ad-image {
-  max-height: 90px;
-  object-fit: cover;
+.mid-ad .real-ad-container {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
-/* ─── Mid Content Ad ──────────────────────────────────────────── */
 .mid-ad .real-ad-link {
-  max-height: 120px;
+  border-radius: 0 !important;
+  border: 1px solid var(--border);
+  min-height: auto;
 }
 
 .mid-ad .real-ad-image {
-  max-height: 90px;
-  object-fit: cover;
+  width: 100%;
+  height: auto !important;
+  max-height: none !important;
+  min-height: auto !important;
+  object-fit: contain !important;
+  border-radius: 0 !important;
+  display: block;
 }
 
-.mid-ad .ad-label {
-  font-size: 0.58rem;
-  color: var(--ink-3);
-  text-align: center;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-  font-family: var(--font-sans);
+/* ─── ✅ Sidebar Ad (Full Width, Full Image) ───────────────── */
+.sidebar-ad {
+  padding: 12px 0;
+  border-top: 1px solid var(--border-dim);
 }
 
-/* ─── Footer Ad ───────────────────────────────────────────────── */
-.footer-ad .real-ad-link {
-  max-height: 140px;
+.sidebar-ad .real-ad-container {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
-.footer-ad .real-ad-image {
-  max-height: 110px;
-  object-fit: cover;
+.sidebar-ad .real-ad-link {
+  border-radius: 0 !important;
+  border: 1px solid var(--border);
+  min-height: auto;
 }
 
-.footer-ad .ad-label {
-  font-size: 0.58rem;
-  color: var(--ink-3);
-  text-align: center;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-  font-family: var(--font-sans);
+.sidebar-ad .real-ad-image {
+  width: 100%;
+  height: auto !important;
+  max-height: 300px !important;
+  min-height: auto !important;
+  object-fit: contain !important;
+  border-radius: 0 !important;
+  display: block;
+}
+
+/* ─── ✅ Footer Ad (Full Width, Full Image) ────────────────── */
+.footer-ad-wrapper {
+  width: 100%;
+  max-width: 100%;
+  margin: 20px 0 0 0;
+  padding: 0;
+}
+
+.footer-ad-wrapper .real-ad-container {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.footer-ad-wrapper .real-ad-link {
+  border-radius: 0 !important;
+  border: 1px solid var(--border);
+  min-height: auto;
+}
+
+.footer-ad-wrapper .real-ad-image {
+  width: 100%;
+  height: auto !important;
+  max-height: none !important;
+  min-height: auto !important;
+  object-fit: contain !important;
+  border-radius: 0 !important;
+  display: block;
 }
 
 /* ─── Breaking Ticker ────────────────────────────────────────── */
@@ -525,6 +586,16 @@ body {
   transition: all 0.15s;
 }
 .ticker .controls button:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
+.ticker-counter {
+  font-size: 0.6rem;
+  color: var(--ink-3);
+  font-weight: 600;
+  font-family: var(--font-sans);
+  flex-shrink: 0;
+  background: var(--border-dim);
+  padding: 2px 10px;
+  border-radius: 10px;
+}
 
 /* ─── News Grid ──────────────────────────────────────────────── */
 .news-grid {
@@ -700,8 +771,6 @@ body {
   transform: scale(1.04);
 }
 
-/* ✅ trending-number-badge REMOVED */
-
 .trending-item-content {
   padding: 12px 14px;
 }
@@ -752,66 +821,125 @@ body {
   transform: scale(1.1);
 }
 
-/* ─── Ticker Counter ───────────────────────────────────────────── */
-.ticker-counter {
-  font-size: 0.6rem;
-  color: var(--ink-3);
-  font-weight: 600;
-  font-family: var(--font-sans);
-  flex-shrink: 0;
-  background: var(--border-dim);
-  padding: 2px 10px;
-  border-radius: 10px;
-}
-
 /* ─── Utilities ──────────────────────────────────────────────── */
 .text-white\/70 { color: rgba(255,255,255,0.6); }
 .mt-2 { margin-top: 6px; }
 .error { color: #dc2626; text-align: center; padding: 40px; }
 
-/* ─── Responsive ─────────────────────────────────────────────── */
+/* ─── ✅ Responsive Mobile Fixes ───────────────────────────────── */
 @media (max-width: 768px) {
-  .ad-banner-wrapper .real-ad-link {
-    max-height: 80px;
+  .header-ad-wrapper {
+    padding: 10px 10px 0 10px;
   }
 
-  .ad-banner-wrapper .real-ad-image {
-    max-height: 60px;
+  /* ✅ Header Ad - Mobile */
+  .header-ad-wrapper .real-ad-link {
+    border-radius: 0 !important;
+    min-height: auto;
   }
 
+  .header-ad-wrapper .real-ad-image {
+    max-height: none !important;
+    min-height: auto !important;
+    object-fit: contain !important;
+  }
+
+  /* ✅ Mid Content Ad - Mobile */
   .mid-ad .real-ad-link {
-    max-height: 80px;
+    border-radius: 0 !important;
+    min-height: auto;
   }
 
   .mid-ad .real-ad-image {
-    max-height: 60px;
+    max-height: none !important;
+    min-height: auto !important;
+    object-fit: contain !important;
   }
 
-  .footer-ad .real-ad-link {
-    max-height: 100px;
-  }
-
-  .footer-ad .real-ad-image {
-    max-height: 80px;
+  /* ✅ Sidebar - Mobile */
+  .sidebar-ad .real-ad-link {
+    border-radius: 0 !important;
+    min-height: auto;
   }
 
   .sidebar-ad .real-ad-image {
-    max-height: 200px;
+    max-height: 250px !important;
+    min-height: auto !important;
+    object-fit: contain !important;
   }
-  
+
+  .sidebar-ad {
+    padding: 12px 0;
+  }
+
+  /* ✅ Footer - Mobile */
+  .footer-ad-wrapper {
+    max-width: 100%;
+    padding: 0;
+    margin: 15px 0 0 0;
+  }
+
+  .footer-ad-wrapper .real-ad-link {
+    border-radius: 0 !important;
+    min-height: auto;
+  }
+
+  .footer-ad-wrapper .real-ad-image {
+    max-height: none !important;
+    min-height: auto !important;
+    object-fit: contain !important;
+  }
+
   .trending-item-title {
     font-size: 0.8rem;
   }
-  
+
   .ticker-counter {
     font-size: 0.5rem;
     padding: 1px 8px;
   }
+
+  .main-layout {
+    padding: 16px 10px 32px;
+  }
 }
 
 @media (max-width: 480px) {
+  .header-ad-wrapper {
+    padding: 8px 8px 0 8px;
+  }
+
+  /* ✅ Sidebar - Small Mobile */
+  .sidebar-ad .real-ad-link {
+    border-radius: 0 !important;
+    min-height: auto;
+  }
+
   .sidebar-ad .real-ad-image {
-    max-height: 150px;
+    max-height: 200px !important;
+    min-height: auto !important;
+    object-fit: contain !important;
+  }
+
+  .sidebar-ad {
+    padding: 8px 0;
+  }
+
+  /* ✅ Footer - Small Mobile */
+  .footer-ad-wrapper {
+    padding: 0;
+    margin: 10px 0 0 0;
+  }
+
+  .footer-ad-wrapper .real-ad-link {
+    border-radius: 0 !important;
+    min-height: auto;
+  }
+
+  .footer-ad-wrapper .real-ad-image {
+    max-height: none !important;
+    min-height: auto !important;
+    object-fit: contain !important;
   }
 
   .real-ad-text {
@@ -824,5 +952,9 @@ body {
 
   .real-ad-text p {
     font-size: 0.8rem;
+  }
+
+  .main-layout {
+    padding: 12px 8px 24px;
   }
 }
