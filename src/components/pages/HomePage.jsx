@@ -74,7 +74,7 @@ const AdDisplay = ({ position, className = '' }) => {
         console.log(`📢 Fetching ads for position: ${position}`);
         const data = await getAdsByPosition(position);
         console.log(`📢 Ads response for ${position}:`, data);
-        
+
         if (data && data.length > 0) {
           setAds(data);
           if (data[0].id) {
@@ -111,9 +111,9 @@ const AdDisplay = ({ position, className = '' }) => {
     return (
       <div className={`real-ad-container ${className}`}>
         <div className="ad-label">— ADVERTISEMENT —</div>
-        <div className="ad-loading" style={{ 
+        <div className="ad-loading" style={{
           height: position === 'sidebar' ? '300px' : '180px',
-          background: '#f1f5f9', 
+          background: '#f1f5f9',
           borderRadius: '12px',
           display: 'flex',
           alignItems: 'center',
@@ -142,44 +142,21 @@ const AdDisplay = ({ position, className = '' }) => {
     }
   };
 
-  // ✅ Get object fit based on position (ALL use 'contain' for full image)
-  const getObjectFit = () => {
-    return 'contain'; // All ads show full image
-  };
+  const getObjectFit = () => 'contain';
 
-  // ✅ Get max heights for all positions
   const getMaxHeight = () => {
-    if (position === 'sidebar') {
-      return '300px';
-    }
-    if (position === 'header') {
-      return 'auto';
-    }
-    if (position === 'mid-content') {
-      return 'auto';
-    }
-    if (position === 'footer') {
-      return 'auto';
-    }
+    if (position === 'sidebar') return '300px';
     return 'auto';
   };
 
-  // ✅ Min heights for all positions
   const getMinHeight = () => {
-    if (position === 'sidebar') {
-      return '200px';
-    }
+    if (position === 'sidebar') return '200px';
     return 'auto';
   };
 
-  // ✅ Get border radius based on position
   const getBorderRadius = () => {
-    if (position === 'footer' || position === 'header' || position === 'mid-content') {
-      return '0';
-    }
-    if (position === 'sidebar') {
-      return '0';
-    }
+    if (position === 'footer' || position === 'header' || position === 'mid-content') return '0';
+    if (position === 'sidebar') return '0';
     return '12px';
   };
 
@@ -231,9 +208,9 @@ const AdDisplay = ({ position, className = '' }) => {
             }}
           />
         ) : (
-          <div style={{ 
-            padding: '20px', 
-            textAlign: 'center', 
+          <div style={{
+            padding: '20px',
+            textAlign: 'center',
             minHeight: '200px',
             display: 'flex',
             alignItems: 'center',
@@ -248,10 +225,10 @@ const AdDisplay = ({ position, className = '' }) => {
           </div>
         )}
         {ads.length > 1 && (
-          <div className="ad-dots" style={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            gap: '6px', 
+          <div className="ad-dots" style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '6px',
             padding: '10px 0',
             background: '#f8fafc'
           }}>
@@ -276,9 +253,8 @@ const AdDisplay = ({ position, className = '' }) => {
 };
 
 // ----------------------------------------------------------------
-// Reusable components
+// Reusable: DateLine (used by Sidebar)
 // ----------------------------------------------------------------
-
 const DateLine = ({ date, className = '' }) => (
   <span className={`date-meta ${className}`}>
     <Clock size={12} /> {date}
@@ -286,39 +262,32 @@ const DateLine = ({ date, className = '' }) => (
 );
 
 // ================================================================
-// Sidebar Component with Weekly Trending (NO NUMBER BADGE)
+// Sidebar Component with Weekly Trending (dates retained)
 // ================================================================
 const Sidebar = ({ newsData }) => {
   const [tab, setTab] = useState('latest');
   const [trendingIndex, setTrendingIndex] = useState(0);
 
-  // Latest: 5 most recent
   const latestItems = [...newsData].slice(0, 5);
-  
-  // Trending: Weekly based - filter last 7 days, sort by views, take top 5
+
   const getTrendingItems = () => {
-    // Filter news from the last 7 days
     const weeklyNews = [...newsData].filter(item => isFromLastWeek(item));
-    
-    // Sort by views (descending) and take top 5
+
     const sortedByViews = [...weeklyNews]
       .sort((a, b) => (b.views || 0) - (a.views || 0))
       .slice(0, 5);
-    
-    // If we have less than 5 weekly news, fallback to all news sorted by views
+
     if (sortedByViews.length < 5) {
-      const allSorted = [...newsData]
+      return [...newsData]
         .sort((a, b) => (b.views || 0) - (a.views || 0))
         .slice(0, 5);
-      return allSorted;
     }
-    
+
     return sortedByViews;
   };
 
   const list = tab === 'latest' ? latestItems : getTrendingItems();
 
-  // Auto-rotate trending news every 5 seconds
   useEffect(() => {
     if (tab === 'trending' && list.length > 0) {
       const interval = setInterval(() => {
@@ -328,7 +297,6 @@ const Sidebar = ({ newsData }) => {
     }
   }, [tab, list.length]);
 
-  // Reset trending index when tab changes
   useEffect(() => {
     setTrendingIndex(0);
   }, [tab]);
@@ -356,14 +324,14 @@ const Sidebar = ({ newsData }) => {
 
       {tab === 'latest' && list.length > 0 && (
         <div className="sidebar-featured">
-          <Link 
-            to={`/news/${list[0].id}`} 
-            className="img-wrap" 
+          <Link
+            to={`/news/${list[0].id}`}
+            className="img-wrap"
             style={{ display: 'block' }}
           >
-            <img 
-              src={safeImage(list[0].image)} 
-              alt={list[0].title || 'News'} 
+            <img
+              src={safeImage(list[0].image)}
+              alt={list[0].title || 'News'}
               onError={handleImgError}
             />
             <div className="overlay"><p>{list[0].title}</p></div>
@@ -378,8 +346,8 @@ const Sidebar = ({ newsData }) => {
             <Link to={`/news/${currentTrendingItem.id}`} className="trending-item-link">
               <div className="trending-item-card">
                 <div className="trending-item-image">
-                  <img 
-                    src={safeImage(currentTrendingItem.image)} 
+                  <img
+                    src={safeImage(currentTrendingItem.image)}
                     alt={currentTrendingItem.title || 'News'}
                     className="trending-img"
                     onError={handleImgError}
@@ -393,7 +361,7 @@ const Sidebar = ({ newsData }) => {
                 </div>
               </div>
             </Link>
-            
+
             <div className="trending-dots">
               {list.map((_, idx) => (
                 <span
@@ -412,9 +380,9 @@ const Sidebar = ({ newsData }) => {
           {list.slice(1).map((n) => (
             <li key={n.id}>
               <Link to={`/news/${n.id}`} style={{ display: 'flex', gap: '10px', textDecoration: 'none', flex: 1 }}>
-                <img 
-                  src={safeImage(n.image)} 
-                  alt={n.title || 'News'} 
+                <img
+                  src={safeImage(n.image)}
+                  alt={n.title || 'News'}
                   onError={handleImgError}
                 />
                 <div className="info">
@@ -435,12 +403,12 @@ const Sidebar = ({ newsData }) => {
 };
 
 // ================================================================
-// Breaking Ticker with Auto-Rotation
+// Breaking Ticker with Auto-Rotation (no date)
 // ================================================================
 const BreakingTicker = ({ newsData }) => {
   const [index, setIndex] = useState(0);
   const items = newsData.slice(0, 5);
-  
+
   useEffect(() => {
     if (items.length > 0) {
       const interval = setInterval(() => {
@@ -451,7 +419,7 @@ const BreakingTicker = ({ newsData }) => {
   }, [items.length]);
 
   if (!items.length) return null;
-  
+
   const item = items[index] || items[0];
   const go = (dir) => {
     setIndex((i) => (i + dir + items.length) % items.length);
@@ -463,7 +431,6 @@ const BreakingTicker = ({ newsData }) => {
       <Link to={`/news/${item.id}`} className="ticker-link">
         <p className="text">{item.title}</p>
       </Link>
-      <span className="date">{formatDate(item)}</span>
       <span className="ticker-counter">{index + 1}/{items.length}</span>
       <div className="controls">
         <button onClick={() => go(-1)}><ChevronLeft size={15} /></button>
@@ -474,48 +441,36 @@ const BreakingTicker = ({ newsData }) => {
 };
 
 // ================================================================
-// ✅ AdBanner Component - Header Ad (Full Width, Full Image)
+// Ad wrappers
 // ================================================================
-const AdBanner = () => {
-  return (
-    <div className="ad-banner-wrapper">
-      <AdDisplay position="header" className="header-ad" />
-    </div>
-  );
-};
+const AdBanner = () => (
+  <div className="ad-banner-wrapper">
+    <AdDisplay position="header" className="header-ad" />
+  </div>
+);
+
+const MidAd = () => (
+  <div className="mid-ad">
+    <AdDisplay position="mid-content" className="mid-content-ad" />
+  </div>
+);
+
+const FooterAd = () => (
+  <div className="footer-ad-wrapper">
+    <AdDisplay position="footer" className="footer-ad-display" />
+  </div>
+);
 
 // ================================================================
-// ✅ MidAd Component - Mid Content Ad (Full Width, Full Image)
-// ================================================================
-const MidAd = () => {
-  return (
-    <div className="mid-ad">
-      <AdDisplay position="mid-content" className="mid-content-ad" />
-    </div>
-  );
-};
-
-// ================================================================
-// ✅ FooterAd Component - Footer Ad (Full Width, Full Image)
-// ================================================================
-const FooterAd = () => {
-  return (
-    <div className="footer-ad-wrapper">
-      <AdDisplay position="footer" className="footer-ad-display" />
-    </div>
-  );
-};
-
-// ================================================================
-// NewsCard - Individual news card (all equal size)
+// NewsCard - Individual news card (no date)
 // ================================================================
 const NewsCard = ({ news }) => (
   <div className="news-card">
     <div className="img-wrap">
       <Link to={`/news/${news.id}`} style={{ display: 'block' }}>
-        <img 
-          src={safeImage(news.image)} 
-          alt={news.title || 'News'} 
+        <img
+          src={safeImage(news.image)}
+          alt={news.title || 'News'}
           onError={handleImgError}
         />
         <span
@@ -530,8 +485,7 @@ const NewsCard = ({ news }) => (
       <Link to={`/news/${news.id}`} style={{ textDecoration: 'none' }}>
         <h3>{news.title}</h3>
       </Link>
-      <div className="footer">
-        <DateLine date={formatDate(news)} />
+      <div className="footer" style={{ justifyContent: 'flex-end' }}>
         <Link to={`/news/${news.id}`} className="read-more">
           Read <ArrowRight size={14} />
         </Link>
@@ -545,7 +499,7 @@ const NewsCard = ({ news }) => (
 // ================================================================
 const NewsGrid = ({ newsData }) => {
   if (!newsData || newsData.length === 0) return null;
-  
+
   return (
     <div className="news-grid">
       {newsData.map((n) => (
@@ -569,7 +523,7 @@ const HomePage = () => {
         const publishedNews = data.filter(
           (item) => item.status === 'published' || !item.status
         );
-        
+
         console.log(`📰 Total: ${data.length}, Published: ${publishedNews.length}`);
         setNewsData(publishedNews);
         setLoading(false);
@@ -617,11 +571,10 @@ const HomePage = () => {
 
   return (
     <div className="app-container">
-      {/* ✅ Header Ad - Positioned ABOVE everything */}
       <div className="header-ad-wrapper">
         <AdBanner />
       </div>
-      
+
       <main className="main-layout">
         <Sidebar newsData={newsData} />
         <div className="main-content">

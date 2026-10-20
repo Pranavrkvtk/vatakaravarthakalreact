@@ -354,7 +354,7 @@ const AdDisplay = ({ position, className = '' }) => {
   );
 };
 
-// ─── ✅ UPDATED: Trending Section with Images (No View Count) ──
+// ─── ✅ UPDATED: Trending Section (No Colored Number Badges) ──
 const TrendingSection = ({ news }) => {
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -386,7 +386,7 @@ const TrendingSection = ({ news }) => {
         <div className="trending-pulse" />
       </div>
 
-      {/* ✅ Featured Trending Item with Image */}
+      {/* ✅ Featured Trending Item */}
       <div className="trending-featured">
         <Link to={`/news/${currentItem.id || currentItem._id}`} className="trending-featured-link">
           <div className="trending-featured-image">
@@ -396,9 +396,6 @@ const TrendingSection = ({ news }) => {
               className="trending-featured-img"
               priority={false}
             />
-            <div className="trending-featured-overlay">
-              <span className="trending-rank-badge">#{currentIndex + 1}</span>
-            </div>
           </div>
           <div className="trending-featured-content">
             <h4 className="trending-featured-title">{currentItem.title}</h4>
@@ -409,11 +406,10 @@ const TrendingSection = ({ news }) => {
         </Link>
       </div>
 
-      {/* ✅ Trending List with Small Images - No View Count */}
+      {/* ✅ Trending List - Number Badges Removed */}
       <div className="trending-list">
         {trendingNews.map((item, index) => {
           const itemId = item.id || item._id;
-          const colors = ['#FF6B6B', '#FFB347', '#4ECDC4', '#45B7D1', '#6C63FF'];
           const isActive = index === currentIndex;
           
           return (
@@ -433,9 +429,6 @@ const TrendingSection = ({ news }) => {
                     e.target.src = FALLBACK_IMG;
                   }}
                 />
-                <div className="trending-number" style={{ background: colors[index] }}>
-                  {index + 1}
-                </div>
               </div>
               <div className="trending-content">
                 <p className="trending-title">{item.title}</p>
