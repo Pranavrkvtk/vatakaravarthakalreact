@@ -1,12 +1,13 @@
-// src/api/axios.js
+
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL:
+    process.env.REACT_APP_API_URL || 'http://localhost:8080/api',
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 300000, // 5 minutes
+  timeout: 300000,
 });
 
 // Add token to requests
@@ -27,7 +28,10 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (
+      error.response?.status === 401 &&
+      !window.location.pathname.includes('/login')
+    ) {
       localStorage.removeItem('token');
       localStorage.removeItem('userId');
       window.location.href = '/login';

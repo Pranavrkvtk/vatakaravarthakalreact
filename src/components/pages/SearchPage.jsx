@@ -1,9 +1,14 @@
 // src/components/pages/SearchPage.jsx
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { searchNews, getSearchSuggestions, advancedSearch } from '../../api/news';
+// ✅ FIXED: Removed unused 'searchNews' import
+import { getSearchSuggestions, advancedSearch } from '../../api/news';
+import { getImageSrc } from '../../utils/imageUtils'; // ✅ ADDED: For proper image paths
 import { Search, X, Clock, ArrowRight, TrendingUp, Calendar } from 'lucide-react';
 import './SearchPage.css';
+
+// ✅ ADDED: Base64 fallback image
+const FALLBACK_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Crect width='100%25' height='100%25' fill='%23f1f5f9'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='14' fill='%2394a3b8' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E";
 
 const SearchPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -50,7 +55,6 @@ const SearchPage = () => {
     setHasSearched(true);
 
     try {
-      // ✅ Use advancedSearch which is exported
       const data = await advancedSearch({
         keyword: query.trim(),
         page,
@@ -58,26 +62,23 @@ const SearchPage = () => {
         sortBy: sort
       });
       
-      console.log('🔍 Search response:', data);
-      
-      // Handle the response correctly - it's an object with 'news' array
       if (data && typeof data === 'object') {
-        // Extract news array from response
         const newsData = data.news || [];
         setResults(newsData);
         setTotalResults(data.total || 0);
         setTotalPages(data.totalPages || 0);
         setCurrentPage(data.page || 0);
         
-        // Save to history only if results found
         if (data.total > 0) {
           const trimmedQuery = query.trim();
-          const newHistory = [trimmedQuery, ...searchHistory.filter(h => h !== trimmedQuery)].slice(0, 10);
-          setSearchHistory(newHistory);
-          localStorage.setItem('searchHistory', JSON.stringify(newHistory));
+          // ✅ FIXED: Use functional state update to avoid missing dependency warning
+          setSearchHistory(prev => {
+            const newHistory = [trimmedQuery, ...prev.filter(h => h !== trimmedQuery)].slice(0, 10);
+            localStorage.setItem('searchHistory', JSON.stringify(newHistory));
+            return newHistory;
+          });
         }
       } else if (Array.isArray(data)) {
-        // Fallback for array response
         setResults(data);
         setTotalResults(data.length);
         setTotalPages(Math.ceil(data.length / 12));
@@ -93,27 +94,25 @@ const SearchPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [searchHistory]);
+  }, []); // ✅ FIXED: Empty dependency array is now safe
 
-  // Initial search on page load - runs once
+  // Initial search on page load
   useEffect(() => {
     if (initialKeyword) {
       performSearch(initialKeyword, 0, 'relevance');
     }
-  }, []); // Empty dependency array - only runs once on mount
+  }, [initialKeyword, performSearch]); // ✅ FIXED: Added missing dependencies
 
   // Get suggestions while typing with debounce
   const handleInputChange = async (e) => {
     const value = e.target.value;
     setKeyword(value);
     
-    // Clear previous timeout
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
 
     if (value.trim().length >= 2) {
-      // Debounce suggestions
       searchTimeoutRef.current = setTimeout(async () => {
         try {
           const data = await getSearchSuggestions(value);
@@ -180,10 +179,8 @@ const SearchPage = () => {
     }
   };
 
-  // Ensure results is always an array for mapping
   const displayResults = Array.isArray(results) ? results : [];
 
-  // Format date
   const formatDate = (dateString) => {
     if (!dateString) return 'Recent';
     try {
@@ -323,10 +320,11 @@ const SearchPage = () => {
                     {news.image && (
                       <div className="result-image">
                         <img
-                          src={news.image}
+                          src={getImageSrc(news.image) || FALLBACK_IMG} // ✅ FIXED: Proper image path
                           alt={news.title}
                           onError={(e) => {
-                            e.target.src = '/placeholder-image.jpg';
+                            if (e.target.src === FALLBACK_IMG) return;
+                            e.target.src = FALLBACK_IMG; // ✅ FIXED: Base64 fallback
                           }}
                         />
                         {news.category && (

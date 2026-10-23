@@ -5,6 +5,8 @@ import { compressImage } from '../../utils/imageUtils';
 import { uploadContentImage } from '../../api/news';
 import { X, Bold, Italic, Underline, Strikethrough, List, ListOrdered, Quote, Link, Image, Upload, Type, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 
+const FALLBACK_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Crect width='100%25' height='100%25' fill='%23f1f5f9'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='14' fill='%2394a3b8' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E";
+
 // ---------- Modern Rich Text Editor ----------
 function RichTextEditor({ value, onChange }) {
   const editorRef = useRef(null);
@@ -99,7 +101,11 @@ function RichTextEditor({ value, onChange }) {
 
       if (data && data.url) {
         const imageUrl = data.url;
-        const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : `http://localhost:8080${imageUrl}`;
+        
+        // ✅ FIXED (Audit B11): Don't hardcode localhost. Use environment variable.
+        const apiUrl = process.env.REACT_APP_API_URL || '/api';
+        const serverUrl = apiUrl.replace(/\/api\/?$/, '');
+        const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : `${serverUrl}${imageUrl}`;
         
         setUploadedImages(prev => [...prev, fullImageUrl]);
 
@@ -705,9 +711,8 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
 
   useEffect(() => {
     if (news) {
-      const scheduled = news.scheduledDate
-        ? new Date(news.scheduledDate).toISOString().slice(0, 16)
-        : "";
+      // ✅ FIXED (Audit B7): Removed .toISOString() to prevent the -5:30 time shift on every save.
+      const scheduled = news.scheduledDate ? news.scheduledDate.slice(0, 16) : "";
       setForm({
         title: news.title || "",
         subtitle: news.subtitle || "",
@@ -783,11 +788,6 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
     e.preventDefault();
     setIsSaving(true);
 
-    console.log('=== SAVING NEWS ===');
-    console.log('Title:', form.title);
-    console.log('Content length:', form.content?.length || 0);
-    console.log('Image exists:', !!form.image);
-
     if (form.status === "scheduled" && !form.scheduledDate) {
       Swal.fire("Missing date", "Pick a publish date/time for a scheduled post.", "warning");
       setIsSaving(false);
@@ -795,7 +795,10 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
     }
 
     try {
-      await onSave(form);
+      // ✅ FIXED (Audit B11): Strip any hardcoded localhost URLs from the HTML before saving to the DB
+      const cleanedContent = form.content.replace(/http:\/\/localhost:8080/g, '');
+      
+      await onSave({ ...form, content: cleanedContent });
       onClose();
     } catch (error) {
       console.error('Save error:', error);
@@ -1133,8 +1136,8 @@ function NewsModal({ isOpen, onClose, news, onSave, categories, onAddCategory })
                     boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
                   }}
                   onError={(e) => {
-                    console.error('Preview image failed to load:', imagePreview);
-                    e.target.src = '/placeholder-image.jpg';
+                    if (e.target.src === FALLBACK_IMG) return;
+                    e.target.src = FALLBACK_IMG;
                   }}
                 />
                 <button

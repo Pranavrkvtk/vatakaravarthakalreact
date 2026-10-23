@@ -19,7 +19,7 @@ function Navbar() {
   const [searchSuggestions, setSearchSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false); // ✅ Mobile search toggle
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const searchTimeoutRef = useRef(null);
   const searchRef = useRef(null);
   const mobileSearchInputRef = useRef(null);
@@ -45,9 +45,8 @@ function Navbar() {
 
     fetchNews();
 
-    // Refresh every 60 seconds
-    const interval = setInterval(fetchNews, 60000);
-    return () => clearInterval(interval);
+    // ✅ FIXED (Audit H7): Removed the 60-second setInterval. 
+    // The navbar now only fetches news once on page load.
   }, []);
 
   // Auto-rotate breaking news
@@ -109,7 +108,7 @@ function Navbar() {
     const query = searchQuery.trim();
     if (query) {
       setShowSuggestions(false);
-      setIsMobileSearchOpen(false); // ✅ Close mobile search
+      setIsMobileSearchOpen(false);
       navigate(`/search?keyword=${encodeURIComponent(query)}`);
       setSearchQuery("");
     }
@@ -119,7 +118,7 @@ function Navbar() {
   const handleSuggestionClick = (suggestion) => {
     setSearchQuery(suggestion);
     setShowSuggestions(false);
-    setIsMobileSearchOpen(false); // ✅ Close mobile search
+    setIsMobileSearchOpen(false);
     navigate(`/search?keyword=${encodeURIComponent(suggestion)}`);
     setSearchQuery("");
   };
@@ -156,7 +155,6 @@ function Navbar() {
   const toggleMobileSearch = () => {
     setIsMobileSearchOpen(!isMobileSearchOpen);
     if (!isMobileSearchOpen) {
-      // Focus input after opening
       setTimeout(() => {
         if (mobileSearchInputRef.current) {
           mobileSearchInputRef.current.focus();
