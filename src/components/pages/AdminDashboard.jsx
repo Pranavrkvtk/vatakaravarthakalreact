@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import api from '../../api/axios';
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
-import DOMPurify from 'dompurify'; // <-- ADDED FOR XSS FIX
+import DOMPurify from 'dompurify';
 import MediaTab from "./MediaTab";
 import NewsModal from "./NewsModal";
 import NewsTab from "./NewsTab";
@@ -11,7 +11,6 @@ import AdsTab from "./AdsTab";
 import CategoriesTab from "./CategoriesTab";
 import DashboardTab from "./DashboardTab";
 
-// ❌ REMOVED checkScheduledPosts from import (Backend handles scheduling now)
 import { getAllNewsAdmin as getAllNews, createNews, updateNews, deleteNews, bulkAction } from '../../api/news';
 
 // ---------- Loading Spinner ----------
@@ -34,7 +33,7 @@ const NavItem = ({ icon, label, active, onClick, badge }) => (
 // ---------- Mobile Bottom Navigation ----------
 const MobileBottomNav = ({ activeTab, onTabChange, onLogout, items }) => (
   <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: "var(--surface)", borderTop: "1px solid var(--border-light)", display: "flex", justifyContent: "space-around", padding: "8px 0", zIndex: 100 }}>
-    {items.slice(0, 4).map((item) => (
+    {items.slice(0, 5).map((item) => (
       <button key={item.id} onClick={() => onTabChange(item.id)} style={{ background: "none", border: "none", padding: "4px 8px", display: "flex", flexDirection: "column", alignItems: "center", color: activeTab === item.id ? "var(--primary)" : "var(--text-secondary)", fontSize: 12, cursor: "pointer" }}>
         <span style={{ fontSize: 20 }}>{item.icon}</span>
         <span>{item.label}</span>
@@ -47,7 +46,7 @@ const MobileBottomNav = ({ activeTab, onTabChange, onLogout, items }) => (
   </div>
 );
 
-// ---------- FIXED: DateTime Widget with its own isolated clock (B21) ----------
+// ---------- Isolated Clock Widget ----------
 const DateTimeWidget = ({ isMobile }) => {
   const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true }));
   
@@ -80,7 +79,7 @@ const StatusBadge = ({ status }) => {
   return <span style={{ background: style.bg, color: style.color, padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, display: "inline-block" }}>{s.charAt(0).toUpperCase() + s.slice(1)}</span>;
 };
 
-// ---------- FIXED: Preview Modal with DOMPurify (S4) ----------
+// ---------- Preview Modal with DOMPurify (S4) ----------
 function PreviewModal({ item, onClose }) {
   if (!item) return null;
   return (
@@ -89,12 +88,71 @@ function PreviewModal({ item, onClose }) {
         <button onClick={onClose} style={{ position: "absolute", top: 12, right: 16, background: "none", border: "none", fontSize: 24, cursor: "pointer" }}>✕</button>
         <h2>{item.title}</h2>
         <StatusBadge status={item.status} />
-        {/* ✅ FIXED XSS HERE */}
         <div style={{ marginTop: 16 }} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(item.content) }} />
       </div>
     </div>
   );
 }
+
+// ---------- SETTINGS TAB (Change Password) ----------
+const SettingsTab = () => {
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await api.put('/auth/password', { oldPassword, newPassword });
+      Swal.fire('Success', 'Password updated successfully!', 'success');
+      setOldPassword("");
+      setNewPassword("");
+    } catch (err) {
+      Swal.fire('Error', err.response?.data?.error || 'Failed to update password', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{ maxWidth: 500, background: "var(--surface)", padding: 30, borderRadius: 16, border: "1px solid var(--border-light)" }}>
+      <h2 style={{ marginTop: 0, marginBottom: 8 }}>Account Settings</h2>
+      <p style={{ color: "var(--text-secondary)", marginBottom: 24 }}>Update your admin password here.</p>
+      
+      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div>
+          <label style={{ display: "block", marginBottom: 8, fontWeight: 600 }}>Current Password</label>
+          <input 
+            type="password" 
+            value={oldPassword} 
+            onChange={(e) => setOldPassword(e.target.value)} 
+            required 
+            placeholder="Enter current password"
+          />
+        </div>
+        <div>
+          <label style={{ display: "block", marginBottom: 8, fontWeight: 600 }}>New Password (min 12 characters)</label>
+          <input 
+            type="password" 
+            value={newPassword} 
+            onChange={(e) => setNewPassword(e.target.value)} 
+            required 
+            minLength={12}
+            placeholder="Enter new secure password"
+          />
+        </div>
+        <button 
+          type="submit" 
+          disabled={loading} 
+          style={{ padding: "12px", background: "var(--primary)", color: "#fff", border: "none", borderRadius: 8, fontWeight: 600, cursor: loading ? "not-allowed" : "pointer", marginTop: 10 }}
+        >
+          {loading ? "Updating..." : "Update Password"}
+        </button>
+      </form>
+    </div>
+  );
+};
 
 // ---------- MAIN ADMIN DASHBOARD ----------
 export default function AdminDashboard() {
@@ -135,9 +193,6 @@ export default function AdminDashboard() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  // ❌ REMOVED: The 30-second checkScheduledPosts interval (B5)
-  // ❌ REMOVED: currentTime state and 1-second setInterval (B21)
 
   // ---------- Unified data loader ----------
   const loadAllData = async () => {
@@ -417,6 +472,7 @@ export default function AdminDashboard() {
     { icon: "📂", label: "Categories", id: "categories" },
     { icon: "📢", label: "Ads", id: "ads" },
     { icon: "🎬", label: "Media", id: "media" },
+    { icon: "⚙️", label: "Settings", id: "settings" }, // ✅ Added Settings
   ];
 
   const renderContent = () => {
@@ -429,6 +485,7 @@ export default function AdminDashboard() {
       case "categories": return <CategoriesTab categories={categories} loading={categoriesLoading} onAdd={handleAddCategory} onRename={handleRenameCategory} onDelete={handleDeleteCategory} />;
       case "ads": return <AdsTab ads={ads} loading={adsLoading} onAdd={handleAddAd} onEdit={handleEditAd} onDelete={handleDeleteAd} onSave={(data, id) => id ? handleEditAd(id, data) : handleAddAd(data)} />;
       case "media": return <MediaTab />;
+      case "settings": return <SettingsTab />; // ✅ Added Settings Route
       default: return <div>Unknown tab</div>;
     }
   };
@@ -464,7 +521,7 @@ export default function AdminDashboard() {
         {isMobile && (
           <div style={{ position: "fixed", top: 0, left: 0, right: 0, background: "var(--surface)", padding: "12px 16px", display: "flex", justifyContent: "space-between", borderBottom: "1px solid var(--border-light)", zIndex: 99 }}>
             <span style={{ fontWeight: 700 }}>📰 News Admin</span>
-            <DateTimeWidget isMobile /> {/* ✅ Clock isolated */}
+            <DateTimeWidget isMobile />
           </div>
         )}
 
@@ -477,7 +534,7 @@ export default function AdminDashboard() {
             )}
             <h1 style={{ margin: 0, fontSize: isMobile ? 22 : 28 }}>{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</h1>
             <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-              {!isMobile && <DateTimeWidget isMobile={false} />} {/* ✅ Clock isolated */}
+              {!isMobile && <DateTimeWidget isMobile={false} />}
             </div>
           </div>
           {renderContent()}
@@ -506,14 +563,12 @@ export default function AdminDashboard() {
             setIsEditModalOpen(false);
             setEditingNews(null);
           } catch (err) {
-            // ✅ FIXED: No more "Saved Locally" fake success (B3)
             console.error('Error saving news:', err);
             Swal.fire({
               icon: 'error',
               title: 'Not Saved',
               text: err.response?.data?.error || 'Server error. Your changes were not saved.',
             });
-            // Modal stays open so the editor doesn't lose their text
           }
         }}
       />
