@@ -120,25 +120,28 @@ const AdsTab = () => {
       setUploadingImage(true);
       setUploadProgress(0);
 
-      // Compress image first
       const reader = new FileReader();
       reader.onload = async (event) => {
         try {
-          // Compress to 800px width with 0.7 quality
-          const compressed = await compressImage(event.target.result, 800, 600, 0.7);
+          // 1. Compress the image (B15 fix)
+          const compressedDataUrl = await compressImage(event.target.result, 800, 600, 0.7);
           
-          // Upload to server
-          const response = await uploadContentImage(file, (progressEvent) => {
+          // Convert base64 Data URL to a File object for uploading
+          const res = await fetch(compressedDataUrl);
+          const blob = await res.blob();
+          const compressedFile = new File([blob], file.name, { type: 'image/jpeg' });
+
+          // 2. Upload the COMPRESSED file to server
+          const response = await uploadContentImage(compressedFile, (progressEvent) => {
             const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
             setUploadProgress(percentCompleted);
           });
 
           if (response && response.url) {
-            // Set the image URL in form
-            const imageUrl = response.url.startsWith('http') ? response.url : `http://localhost:8080${response.url}`;
+            // 3. FIXED: Save the relative URL returned by the server
             setFormData(prev => ({
               ...prev,
-              imageUrl: imageUrl
+              imageUrl: response.url 
             }));
             
             Swal.fire({

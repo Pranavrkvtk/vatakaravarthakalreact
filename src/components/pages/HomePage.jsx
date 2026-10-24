@@ -250,6 +250,8 @@ const HomePage = () => {
     try {
       setLoading(pageNumber === 0);
       const data = await getAllNews(pageNumber, 20); 
+      
+      // ✅ PAGINATION FIX: Read from data.content
       const isPaginated = data && data.content !== undefined;
       const newItems = isPaginated ? data.content : data;
       const publishedNews = newItems.filter(item => item.status === 'published' || !item.status);

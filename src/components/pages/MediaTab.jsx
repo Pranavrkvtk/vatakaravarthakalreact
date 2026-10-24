@@ -1,5 +1,5 @@
-    import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useState, useEffect } from "react";
+import api from "../../api/axios"; // ✅ Import the configured api instance
 import Swal from "sweetalert2";
 
 const MediaTab = () => {
@@ -13,18 +13,13 @@ const MediaTab = () => {
   const fetchMedia = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      // Video endpoint
-      const videoRes = await axios.get("http://localhost:8080/api/media/video", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // ✅ Removed localhost and manual token (api interceptor handles it)
+      const videoRes = await api.get("/media/video");
       setVideoUrl(videoRes.data.videoUrl || "");
       setNewVideoUrl(videoRes.data.videoUrl || "");
 
-      // Banners endpoint
-      const bannerRes = await axios.get("http://localhost:8080/api/media/banners", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // ✅ Removed localhost and manual token
+      const bannerRes = await api.get("/media/banners");
       setBanners(bannerRes.data || []);
     } catch (err) {
       console.error(err);
@@ -44,12 +39,8 @@ const MediaTab = () => {
       return;
     }
     try {
-      const token = localStorage.getItem("token");
-      await axios.put(
-        "http://localhost:8080/api/media/video",
-        { videoUrl: newVideoUrl },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      // ✅ Removed localhost and manual token
+      await api.put("/media/video", { videoUrl: newVideoUrl });
       setVideoUrl(newVideoUrl);
       Swal.fire("Success!", "Video URL updated.", "success");
     } catch (err) {
@@ -66,10 +57,10 @@ const MediaTab = () => {
 
     setUploading(true);
     try {
-      const token = localStorage.getItem("token");
-      const res = await axios.post("http://localhost:8080/api/media/banners", formData, {
+      // ✅ Removed localhost and manual token. 
+      // Note: We still need to explicitly set multipart/form-data for file uploads
+      const res = await api.post("/media/banners", formData, {
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
       });
@@ -95,10 +86,8 @@ const MediaTab = () => {
     });
     if (!result.isConfirmed) return;
     try {
-      const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:8080/api/media/banners/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      // ✅ Removed localhost and manual token
+      await api.delete(`/media/banners/${id}`);
       setBanners(banners.filter(b => b.id !== id));
       Swal.fire("Deleted!", "", "success");
     } catch (err) {
