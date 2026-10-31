@@ -1,15 +1,18 @@
 // src/components/pages/NewsView.jsx
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getNewsById, getAdsByPosition, recordAdView, recordAdClick } from '../../api/news';
 import { getImageSrc } from '../../utils/imageUtils';
-import { ArrowLeft, Calendar, Clock, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import './NewsView.css';
 
 const FALLBACK_IMG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Crect width='100%25' height='100%25' fill='%23f1f5f9'/%3E%3Ctext x='50%25' y='50%25' font-family='sans-serif' font-size='14' fill='%2394a3b8' text-anchor='middle' dy='.3em'%3ENo Image%3C/text%3E%3C/svg%3E";
 const sanitize = (html) => DOMPurify.sanitize(html);
 
+/* ────────────────────────────────────────────────────────── */
+/*  In-content ad unit                                        */
+/* ────────────────────────────────────────────────────────── */
 const InContentAd = ({ position = 'mid-content', className = '' }) => {
   const [ads, setAds] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,11 +46,8 @@ const InContentAd = ({ position = 'mid-content', className = '' }) => {
     }
   }, [ads]);
 
-  if (loading) return <div className={`in-content-ad ${className}`}><div className="ad-label">— {position === 'header' ? 'ADVERTISEMENT' : 'SPONSORED'} —</div><div className="in-content-ad-link" style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', textAlign: 'center', minHeight: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '14px' }}>Loading ad...</div></div>;
-  if (ads.length === 0) {
-    if (position === 'header') return null;
-    return <div className={`in-content-ad ${className}`}><div className="ad-label">— SPONSORED —</div><div className="in-content-ad-link" style={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '20px', textAlign: 'center', minHeight: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '14px' }}>Ad space available</div></div>;
-  }
+  // If loading or no ads, hide completely to avoid big white gaps
+  if (loading || ads.length === 0) return null;
 
   const ad = ads[currentIndex];
   const handleAdClick = (e) => { if (ad.id) recordAdClick(ad.id); if (!ad.linkUrl) e.preventDefault(); };
@@ -57,18 +57,31 @@ const InContentAd = ({ position = 'mid-content', className = '' }) => {
   return (
     <div className={`in-content-ad ${className}`}>
       <div className="ad-label">— {isHeader ? 'ADVERTISEMENT' : 'SPONSORED'} —</div>
-      <a href={ad.linkUrl || '#'} target={ad.linkUrl ? '_blank' : '_self'} rel="noopener noreferrer" onClick={handleAdClick} className="in-content-ad-link" style={{ backgroundColor: ad.backgroundColor || '#ffffff', border: isHeader ? 'none' : `1px solid ${ad.borderColor || '#e2e8f0'}`, borderBottom: isHeader ? '1px solid #e2e8f0' : `1px solid ${ad.borderColor || '#e2e8f0'}`, borderRadius: isHeader ? '0' : '12px', overflow: 'hidden', display: 'block', textDecoration: 'none', width: '100%' }}>
+      <a 
+        href={ad.linkUrl || '#'} 
+        target={ad.linkUrl ? '_blank' : '_self'} 
+        rel="noopener noreferrer" 
+        onClick={handleAdClick} 
+        className="in-content-ad-link"
+      >
         {imageSrc && !imgError ? (
-          <img src={imageSrc} alt={ad.altText || ad.title || 'Advertisement'} style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'contain' }} onError={() => setImgError(true)} />
+          <img 
+            src={imageSrc} 
+            alt={ad.altText || ad.title || 'Advertisement'} 
+            className="ad-image"
+            onError={() => setImgError(true)} 
+          />
         ) : (
-          <div style={{ padding: '20px', textAlign: 'center', minHeight: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', width: '100%' }}>
-            <h4 style={{ margin: 0, color: '#0f172a', fontSize: '16px' }}>{ad.title || 'Advertisement'}</h4>
-            {ad.description && <p style={{ margin: '8px 0 0', color: '#64748b', fontSize: '14px' }}>{ad.description}</p>}
+          <div className="ad-fallback">
+            <h4>{ad.title || 'Advertisement'}</h4>
+            {ad.description && <p>{ad.description}</p>}
           </div>
         )}
         {ads.length > 1 && !isHeader && (
-          <div className="ad-dots" style={{ display: 'flex', justifyContent: 'center', gap: '6px', padding: '8px 0', background: '#f8fafc' }}>
-            {ads.map((_, idx) => <span key={idx} style={{ width: idx === currentIndex ? '16px' : '8px', height: '8px', borderRadius: '4px', background: idx === currentIndex ? '#6C63FF' : '#e2e8f0', transition: 'all 0.3s ease', display: 'inline-block' }} />)}
+          <div className="ad-dots">
+            {ads.map((_, idx) => (
+              <span key={idx} className={`ad-dot ${idx === currentIndex ? 'active' : ''}`} />
+            ))}
           </div>
         )}
       </a>
@@ -76,43 +89,94 @@ const InContentAd = ({ position = 'mid-content', className = '' }) => {
   );
 };
 
+/* ────────────────────────────────────────────────────────── */
+/*  Content parsing helpers                                   */
+/* ────────────────────────────────────────────────────────── */
+const isHtmlContent = (content) => typeof content === 'string' && /<\s*(p|div|br|h[1-6]|ul|ol|li|blockquote|pre|table|section|article|figure|img)\b[^>]*>/i.test(content);
+
+const splitHtmlIntoBlocks = (html) => {
+  if (typeof window === 'undefined' || !window.DOMParser) return [html];
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const blocks = [];
+
+  const splitOnBr = (el) => {
+    const parts = [];
+    let current = '';
+    el.childNodes.forEach((child) => {
+      if (child.nodeType === 1 && child.tagName === 'BR') {
+        if (current.trim()) parts.push(`<p>${current}</p>`);
+        current = '';
+      } else if (child.nodeType === 3) {
+        current += child.textContent;
+      } else if (child.nodeType === 1) {
+        current += child.outerHTML;
+      }
+    });
+    if (current.trim()) parts.push(`<p>${current}</p>`);
+    return parts;
+  };
+
+  Array.from(doc.body.childNodes).forEach((node) => {
+    if (node.nodeType === 3) {
+      const text = node.textContent.trim();
+      if (text) blocks.push(`<p>${text}</p>`);
+    } else if (node.nodeType === 1) {
+      if (node.tagName === 'BR') return;
+      const hasBlockChild = node.querySelector?.('p, div, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, pre, table');
+      const hasBr = node.querySelector?.('br');
+      if (!hasBlockChild && hasBr) {
+        blocks.push(...splitOnBr(node));
+      } else if (!hasBlockChild && node.tagName !== 'P') {
+        blocks.push(`<p>${node.innerHTML}</p>`);
+      } else {
+        blocks.push(node.outerHTML);
+      }
+    }
+  });
+  return blocks.length ? blocks : [html];
+};
+
 const splitIntoBlocks = (content) => {
   if (!content) return [];
   const lines = content.split('\n');
+  const hasBlankLines = /\n[ \t]*\r?\n/.test(content);
   const blocks = [];
   let currentBlock = '';
   let inList = false;
-  let listType = null;
-  
+
+  const flush = () => {
+    if (currentBlock.trim()) blocks.push(currentBlock.trim());
+    currentBlock = '';
+    inList = false;
+  };
+
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const trimmed = line.trim();
-    if (!trimmed) {
-      if (currentBlock) { blocks.push(currentBlock); currentBlock = ''; inList = false; listType = null; }
-      continue;
-    }
+    const trimmed = lines[i].trim();
+    if (!trimmed) { flush(); continue; }
+
     const isOrderedListItem = /^\d+\.\s/.test(trimmed);
     const isUnorderedListItem = /^[-*•]\s/.test(trimmed);
     const isListItem = isOrderedListItem || isUnorderedListItem;
     const isHeading = /^#{1,6}\s/.test(trimmed);
-    
-    if (isListItem) {
-      if (currentBlock && !inList) { blocks.push(currentBlock); currentBlock = ''; }
-      if (!inList) { inList = true; listType = isOrderedListItem ? 'ordered' : 'unordered'; currentBlock = trimmed; }
-      else { currentBlock += '\n' + trimmed; }
-    } else if (isHeading) {
-      if (currentBlock) { blocks.push(currentBlock); currentBlock = ''; }
-      inList = false; listType = null; blocks.push(trimmed);
+
+    if (isHeading) {
+      flush();
+      blocks.push(trimmed);
+    } else if (isListItem) {
+      if (currentBlock && !inList) flush();
+      if (!inList) { inList = true; currentBlock = trimmed; }
+      else currentBlock += '\n' + trimmed;
     } else {
-      if (inList) {
-        if (currentBlock) { blocks.push(currentBlock); currentBlock = ''; }
-        inList = false; listType = null; currentBlock = trimmed;
+      if (inList) flush();
+      if (hasBlankLines) {
+        currentBlock = currentBlock ? currentBlock + ' ' + trimmed : trimmed;
       } else {
-        if (currentBlock) { currentBlock += ' ' + trimmed; } else { currentBlock = trimmed; }
+        if (currentBlock) flush();
+        currentBlock = trimmed;
       }
     }
   }
-  if (currentBlock) blocks.push(currentBlock);
+  flush();
   return blocks;
 };
 
@@ -128,13 +192,11 @@ const renderListBlock = (block, key) => {
   const lines = block.split('\n').filter(item => item.trim());
   if (lines.length === 0) return null;
   const isOrdered = /^\d+\.\s/.test(lines[0].trim());
-  
   const listItems = lines.map((item, idx) => {
     let text = item.trim();
     text = isOrdered ? text.replace(/^\d+\.\s*/, '') : text.replace(/^[-*•]\s*/, '');
     return <li key={`${key}-li-${idx}`} dangerouslySetInnerHTML={{ __html: sanitize(text) }} />;
   });
-  
   return (
     <div key={key} className="article-list-wrapper">
       {isOrdered ? <ol className="article-list ordered">{listItems}</ol> : <ul className="article-list unordered">{listItems}</ul>}
@@ -147,65 +209,77 @@ const renderHeadingBlock = (block, key) => {
   const match = trimmed.match(/^(#{1,6})\s(.+)/);
   if (!match) return null;
   const HeadingTag = `h${Math.min(match[1].length, 6)}`;
-  return React.createElement(HeadingTag, { key: key, className: 'article-heading' }, match[2]);
+  return React.createElement(HeadingTag, { key, className: 'article-heading' }, match[2]);
 };
 
-const renderContentWithInlineAds = (content, adPositions = []) => {
+/* ────────────────────────────────────────────────────────── */
+/*  Main content renderer                                    */
+/* ────────────────────────────────────────────────────────── */
+const renderContentWithInlineAds = (content, articleImageUrl, articleTitle) => {
   if (!content) return <p>No content available</p>;
-  const blocks = splitIntoBlocks(content);
+
+  let blocks;
+  if (isHtmlContent(content)) {
+    blocks = splitHtmlIntoBlocks(content);
+  } else {
+    blocks = splitIntoBlocks(content);
+  }
+
   if (blocks.length === 0) return <div dangerouslySetInnerHTML={{ __html: sanitize(content) }} />;
 
   const elements = [];
   let adIndex = 0;
-  let renderedBlockCount = 0;
+  let renderedCount = 0;
+  const AD_INTERVAL = 5; // Show ad after every 5 paragraphs
 
   blocks.forEach((block, blockIndex) => {
     const trimmed = block.trim();
     if (!trimmed) return;
 
-    const shouldHaveAd = adPositions.includes(renderedBlockCount);
-
-    if (isHeadingBlock(trimmed)) {
+    if (isHtmlContent(content)) {
+      elements.push(
+        <div
+          key={`block-${blockIndex}`}
+          className="article-html-block"
+          dangerouslySetInnerHTML={{ __html: sanitize(trimmed) }}
+        />
+      );
+    } else if (isHeadingBlock(trimmed)) {
       elements.push(renderHeadingBlock(trimmed, `heading-${blockIndex}`));
-      renderedBlockCount++;
     } else if (isListBlock(trimmed)) {
       elements.push(renderListBlock(trimmed, `list-${blockIndex}`));
-      renderedBlockCount++;
     } else {
-      const isLongParagraph = trimmed.length > 100;
-      if (shouldHaveAd && isLongParagraph) {
-        let sentences = trimmed.match(/[^.!?]+[.!?]+/g);
-        if (!sentences || sentences.length < 2) {
-          const words = trimmed.split(' ');
-          if (words.length > 10) {
-            const midPoint = Math.floor(words.length * 0.5);
-            const firstHalf = words.slice(0, midPoint).join(' ');
-            const secondHalf = words.slice(midPoint).join(' ');
-            
-            elements.push(<div key={`p-${blockIndex}-start`} className="article-paragraph"><span dangerouslySetInnerHTML={{ __html: sanitize(firstHalf) }} /></div>);
-            elements.push(<InContentAd key={`ad-inline-${blockIndex}-${adIndex}`} position="inline" className="ad-inline" />);
-            adIndex++;
-            elements.push(<div key={`p-${blockIndex}-end`} className="article-paragraph"><span dangerouslySetInnerHTML={{ __html: sanitize(secondHalf) }} /></div>);
-          } else {
-            elements.push(<div key={`p-${blockIndex}`} className="article-paragraph"><span dangerouslySetInnerHTML={{ __html: sanitize(trimmed) }} /></div>);
-          }
-        } else {
-          const breakIndex = Math.floor(sentences.length * 0.5);
-          const firstHalf = sentences.slice(0, breakIndex).join(' ');
-          const secondHalf = sentences.slice(breakIndex).join(' ');
-          
-          elements.push(<div key={`p-${blockIndex}-start`} className="article-paragraph"><span dangerouslySetInnerHTML={{ __html: sanitize(firstHalf) }} /></div>);
-          elements.push(<InContentAd key={`ad-inline-${blockIndex}-${adIndex}`} position="inline" className="ad-inline" />);
-          adIndex++;
-          elements.push(<div key={`p-${blockIndex}-end`} className="article-paragraph"><span dangerouslySetInnerHTML={{ __html: sanitize(secondHalf) }} /></div>);
-        }
-      } else {
-        elements.push(<div key={`p-${blockIndex}`} className="article-paragraph"><span dangerouslySetInnerHTML={{ __html: sanitize(trimmed) }} /></div>);
-        if (renderedBlockCount % 3 === 2 && renderedBlockCount < blocks.length - 1) {
-          elements.push(<InContentAd key={`ad-between-${blockIndex}`} position="mid-content" className="ad-between-paragraphs" />);
-        }
-      }
-      renderedBlockCount++;
+      elements.push(
+        <p key={`p-${blockIndex}`} className="article-paragraph">
+          <span dangerouslySetInnerHTML={{ __html: sanitize(trimmed) }} />
+        </p>
+      );
+    }
+    renderedCount++;
+
+    // Insert an ad after every X blocks
+    if (renderedCount > 0 && renderedCount % AD_INTERVAL === 0 && renderedCount < blocks.length) {
+      elements.push(
+        <InContentAd
+          key={`ad-inline-${blockIndex}-${adIndex++}`}
+          position="mid-content"
+          className="ad-inline"
+        />
+      );
+    }
+
+    // After the 2nd block, insert the featured image
+    if (renderedCount === 2 && articleImageUrl) {
+      elements.push(
+        <div key="inline-image" className="article-inline-image-wrapper">
+          <img
+            src={articleImageUrl || FALLBACK_IMG}
+            alt={articleTitle}
+            className="article-inline-image"
+            onError={(e) => { e.target.src = FALLBACK_IMG; }}
+          />
+        </div>
+      );
     }
   });
 
@@ -213,6 +287,9 @@ const renderContentWithInlineAds = (content, adPositions = []) => {
   return elements;
 };
 
+/* ────────────────────────────────────────────────────────── */
+/*  Page component                                           */
+/* ────────────────────────────────────────────────────────── */
 const NewsView = () => {
   const { id } = useParams();
   const [news, setNews] = useState(null);
@@ -228,10 +305,12 @@ const NewsView = () => {
       .catch((err) => { console.error(err); setError('Article not found.'); setLoading(false); });
   }, [id]);
 
-  const renderContent = () => {
+  const imageSrc = news ? (getImageSrc(news.image) || FALLBACK_IMG) : FALLBACK_IMG;
+
+  const renderedContent = useMemo(() => {
     if (!news || !news.content) return <p>No content available</p>;
-    return renderContentWithInlineAds(news.content, [1, 3, 5, 7, 9]);
-  };
+    return renderContentWithInlineAds(news.content, null, news.title);
+  }, [news]);
 
   const handleContextMenu = (e) => { e.preventDefault(); return false; };
   const handleKeyDown = (e) => {
@@ -258,11 +337,9 @@ const NewsView = () => {
   if (error) return <div className="news-view-container error">{error}</div>;
   if (!news) return <div className="news-view-container">Article not found.</div>;
 
-  const imageSrc = getImageSrc(news.image) || FALLBACK_IMG;
-
   return (
     <div className="news-view-container protected-content" ref={articleRef} onContextMenu={handleContextMenu} onKeyDown={handleKeyDown} onSelectStart={handleSelectStart} onCopy={handleCopy} onCut={handleCut} onPaste={handlePaste} onDragStart={handleDrag} onDrag={handleDrag} onDrop={handleDrop} onTouchMove={handleTouchMove} style={{ userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none', WebkitTouchCallout: 'none', pointerEvents: 'auto', touchAction: 'manipulation' }}>
-      
+
       <div className="header-ad-wrapper"><InContentAd position="header" className="ad-header-top" /></div>
       <Link to="/" className="back-link"><ArrowLeft size={18} /> Back to Home</Link>
 
@@ -273,20 +350,20 @@ const NewsView = () => {
               <img ref={imageRef} src={imageSrc} alt={news.title} className={`article-image ${isImageLoaded ? 'loaded' : 'loading'}`} onError={(e) => { e.target.src = FALLBACK_IMG; }} onLoad={() => setIsImageLoaded(true)} onContextMenu={handleImageContextMenu} onDragStart={handleImageDrag} draggable={false} style={{ userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none', pointerEvents: 'none', WebkitTouchCallout: 'none', touchAction: 'none' }} />
               <div className="image-protection-layer" onContextMenu={handleImageContextMenu} onDragStart={handleImageDrag} />
             </div>
-            <div className="image-overlay"><span className="category-badge">{news.category || 'General'}</span></div>
           </div>
         )}
 
         <div className="article-meta">
-          <span className="meta-item"><Calendar size={16} />{new Date(news.publishedDate || news.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-          <span className="meta-item"><Clock size={16} />{new Date(news.publishedDate || news.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
+          <span className="category-badge">{news.category || 'General'}</span>
+          <span className="meta-item"><Calendar size={14} />{new Date(news.publishedDate || news.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+          <span className="meta-item"><Clock size={14} />{new Date(news.publishedDate || news.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
         </div>
 
         <h1 className="article-title">{news.title}</h1>
         {news.subtitle && <h2 className="article-subtitle">{news.subtitle}</h2>}
 
         <div className="article-content protected-text">
-          {renderContent()}
+          {renderedContent}
         </div>
 
         {news.tags && (

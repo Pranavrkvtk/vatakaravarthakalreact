@@ -1,1317 +1,365 @@
 /* src/components/pages/NewsView.css */
 
+/* --- Base & Layout --- */
 .news-view-container {
   max-width: 800px;
   margin: 0 auto;
-  padding: 2rem 1rem;
-  min-height: 80vh;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
-  touch-action: manipulation;
-  position: relative;
+  padding: 24px 20px 60px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #ffffff;
+  color: #222222;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
 }
 
+.news-view-container * {
+  box-sizing: border-box;
+}
+
+/* --- Header Ad Wrapper --- */
+.header-ad-wrapper {
+  margin: 0 -20px 24px -20px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+/* --- Back Link --- */
 .back-link {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: #4f46e5;
+  color: #444;
   text-decoration: none;
+  font-size: 15px;
   font-weight: 500;
-  margin-bottom: 1.5rem;
+  margin-bottom: 24px;
   transition: color 0.2s;
-  user-select: auto;
-  -webkit-user-select: auto;
-  -moz-user-select: auto;
-  -ms-user-select: auto;
-  -webkit-touch-callout: default;
 }
+.back-link:hover { color: #000; }
 
-.back-link:hover {
-  color: #4338ca;
-}
-
-.loader {
-  text-align: center;
-  color: #6b7280;
-  font-size: 1.2rem;
-  padding: 3rem 0;
-}
-
-.error {
-  text-align: center;
-  color: #dc2626;
-  padding: 3rem 0;
-}
-
-.news-article {
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-  overflow: hidden;
-  padding: 0 1.5rem 2rem;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
-  touch-action: manipulation;
-}
-
-/* ===== IMAGE WITH PROTECTION ===== */
+/* --- Hero Image --- */
 .article-image-wrapper {
   position: relative;
-  margin: 0 -1.5rem;
-  background: #f3f4f6;
-  min-height: 200px;
+  margin-bottom: 24px;
+  border-radius: 8px;
   overflow: hidden;
-  touch-action: none;
-}
-
-.image-protection-overlay {
-  position: relative;
+  background-color: #f1f5f9;
   width: 100%;
-  overflow: hidden;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
-  touch-action: none;
 }
-
 .article-image {
   width: 100%;
   height: auto;
-  max-height: 450px;
-  object-fit: cover;
+  max-height: 500px;
   display: block;
-  pointer-events: none;
-  -webkit-user-drag: none;
-  user-drag: none;
-  -webkit-touch-callout: none;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  touch-action: none;
-}
-
-.article-image.loading {
-  opacity: 0;
+  object-fit: cover;
   transition: opacity 0.3s ease;
 }
+.article-image.loading { opacity: 0; }
+.article-image.loaded { opacity: 1; }
 
-.article-image.loaded {
-  opacity: 1;
-  transition: opacity 0.5s ease;
-}
-
+.image-protection-overlay { position: relative; }
 .image-protection-layer {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  cursor: default;
-  background: transparent;
+  inset: 0;
   z-index: 2;
-  pointer-events: all;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-  touch-action: none;
 }
 
-.image-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 2rem 1.5rem 1rem;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.6));
-  z-index: 3;
-  pointer-events: none;
-}
-
-.category-badge {
-  display: inline-block;
-  background: #4f46e5;
-  color: white;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.protected-text {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
-  touch-action: manipulation;
-}
-
-.protected-text * {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
-  touch-action: manipulation;
-}
-
+/* --- Article Meta (Date/Time/Category) --- */
 .article-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 1.5rem;
-  padding: 1rem 0 0.5rem;
-  color: #6b7280;
-  font-size: 0.9rem;
+  align-items: center;
+  gap: 16px;
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 20px;
 }
-
+.category-badge {
+  background: #2563eb;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  border-radius: 4px;
+}
 .meta-item {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
+/* --- Title & Subtitle --- */
 .article-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #1f2937;
-  line-height: 1.2;
-  margin: 0.5rem 0 0.25rem;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
+  font-size: 34px;
+  line-height: 1.3;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 16px 0;
+  letter-spacing: -0.5px;
 }
-
 .article-subtitle {
-  font-size: 1.2rem;
+  font-size: 20px;
+  line-height: 1.5;
   font-weight: 400;
-  color: #6b7280;
-  margin: 0 0 1rem;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
+  color: #475569;
+  margin: 0 0 32px 0;
 }
 
+/* --- Article Content Body --- */
 .article-content {
-  font-size: 1.1rem;
-  line-height: 1.8;
-  color: #1f2937;
-  margin: 1.5rem 0;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
-  touch-action: manipulation;
+  font-size: 19px;
+  line-height: 1.75;
+  color: #222222;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
-.article-content p {
-  margin-bottom: 1rem;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
+/* Paragraphs inside HTML or Plain Text */
+.article-content p, 
+.article-html-block p,
+.article-paragraph {
+  margin: 0 0 24px 0;
+  display: block;
 }
 
-.article-content h2,
-.article-content h3 {
-  margin-top: 1.5rem;
-  margin-bottom: 0.5rem;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
-}
-
+/* Images inside content */
 .article-content img {
   max-width: 100%;
   height: auto;
+  display: block;
+  margin: 32px auto;
   border-radius: 8px;
-  margin: 1rem 0;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-user-drag: none;
-  user-drag: none;
-  -webkit-touch-callout: none;
-  touch-action: none;
 }
 
-.article-content blockquote {
-  border-left: 4px solid #4f46e5;
-  padding-left: 1rem;
-  margin: 1rem 0;
-  color: #4b5563;
-  font-style: italic;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
-}
-
-.article-content ul,
-.article-content ol {
-  padding-left: 1.5rem;
-  margin-bottom: 1rem;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
-}
-
-.article-content li {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
-}
-
-.article-paragraph {
-  margin-bottom: 16px;
-  line-height: 1.8;
-  font-size: 1.05rem;
-  color: #1e293b;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
-}
-
-.article-paragraph span {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
-}
-
-/* ==============================================================
-   ✅ HEADINGS
-   ============================================================== */
-
+/* Headings & Lists */
 .article-heading {
-  margin: 1.5rem 0 0.75rem;
+  font-size: 24px;
   font-weight: 700;
-  color: #1f2937;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
+  color: #0f172a;
+  margin: 40px 0 20px 0;
+  line-height: 1.3;
 }
-
-h1.article-heading {
-  font-size: 1.8rem;
-}
-
-h2.article-heading {
-  font-size: 1.5rem;
-}
-
-h3.article-heading {
-  font-size: 1.25rem;
-}
-
-h4.article-heading {
-  font-size: 1.1rem;
-}
-
-h5.article-heading {
-  font-size: 1rem;
-}
-
-h6.article-heading {
-  font-size: 0.9rem;
-  color: #4b5563;
-}
-
-/* ==============================================================
-   ✅ LISTS
-   ============================================================== */
-
 .article-list-wrapper {
-  margin: 0.75rem 0 1.25rem;
-  padding-left: 0.5rem;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
+  margin: 0 0 24px 0;
 }
-
 .article-list {
-  margin: 0.5rem 0;
-  padding-left: 1.5rem;
-  line-height: 1.8;
-  color: #1e293b;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
+  margin: 0;
+  padding-left: 24px;
 }
-
-.article-list.ordered {
-  list-style-type: decimal;
-}
-
-.article-list.unordered {
-  list-style-type: disc;
-}
-
 .article-list li {
-  margin-bottom: 0.25rem;
-  padding-left: 0.25rem;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
+  margin-bottom: 12px;
+  line-height: 1.7;
 }
 
-/* Nested lists */
-.article-list ul,
-.article-list ol {
-  margin-top: 0.25rem;
-  margin-bottom: 0.25rem;
-  padding-left: 1.5rem;
-}
-
-/* ==============================================================
-   ✅ IN-CONTENT ADS — Full Width, Natural Height
-   ============================================================== */
-
+/* --- In-Content Ads --- */
 .in-content-ad {
-  margin: 20px 0;
-  padding: 4px 0;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
+  margin: 40px 0;
+  text-align: center;
   display: block;
-  width: 100%;
 }
 
-.in-content-ad .ad-label {
-  font-size: 0.58rem;
+.ad-label {
+  font-size: 11px;
   color: #94a3b8;
-  text-align: center;
-  letter-spacing: 0.12em;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
-  margin-bottom: 8px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
-  display: block;
+  margin-bottom: 12px;
+  font-weight: 500;
 }
 
 .in-content-ad-link {
-  transition: all 0.3s ease;
+  display: block;
   text-decoration: none;
-  display: block;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
-  width: 100%;
-}
-
-.in-content-ad-link:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(11, 11, 26, 0.13);
-}
-
-.in-content-ad-link:active {
-  transform: scale(0.98);
-}
-
-/* ✅ Full width, auto height, no crop */
-.in-content-ad-image {
-  width: 100% !important;
-  height: auto !important;
-  display: block !important;
-  object-fit: contain !important;
-  max-width: 100% !important;
-  max-height: none !important;
-  min-height: auto !important;
-}
-
-/* ─── Inline Ads (inside paragraphs) ───────────────────────── */
-.ad-inline {
-  margin: 16px 0;
-  padding: 4px 0;
-}
-
-.ad-inline .ad-label {
-  font-size: 0.55rem;
-  color: #94a3b8;
-  text-align: center;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
-  display: block;
-}
-
-.ad-inline .in-content-ad-link {
-  border-radius: 12px !important;
-  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px;
   overflow: hidden;
-  display: block;
-  transition: all 0.3s ease;
-  text-decoration: none;
   width: 100%;
-  background: #ffffff;
 }
 
-.ad-inline .in-content-ad-link:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(11, 11, 26, 0.13);
+.ad-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
 }
 
-.ad-inline .in-content-ad-link:active {
-  transform: scale(0.98);
+.ad-fallback {
+  padding: 24px;
+  text-align: center;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
 }
-
-.ad-inline .in-content-ad-image {
-  width: 100% !important;
-  height: auto !important;
-  display: block !important;
-  object-fit: contain !important;
-  max-width: 100% !important;
-  max-height: none !important;
-  min-height: auto !important;
+.ad-fallback h4 {
+  margin: 0 0 8px 0;
+  color: #0f172a;
+  font-size: 16px;
 }
-
-.ad-between-paragraphs {
-  margin: 16px 0 24px;
-  padding: 8px 0;
-}
-
-.ad-content-end {
-  margin: 40px 0 20px;
+.ad-fallback p {
+  margin: 0;
+  color: #64748b;
+  font-size: 14px;
 }
 
 .ad-dots {
   display: flex;
   justify-content: center;
-  gap: 6px;
-  padding: 8px 0 4px;
+  gap: 8px;
+  padding: 12px 0;
+  background: #f8fafc;
 }
-
-.ad-dots span {
+.ad-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #e2e8f0;
+  background: #cbd5e1;
   transition: all 0.3s ease;
-  display: inline-block;
 }
-
-.ad-dots span.active {
-  background: #6C63FF;
-  width: 16px;
+.ad-dot.active {
+  width: 20px;
   border-radius: 4px;
+  background: #2563eb;
 }
 
+/* --- Tags --- */
 .article-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 1.5rem 0;
+  gap: 10px;
+  margin: 40px 0 32px 0;
 }
-
 .tag {
-  background: #f3f4f6;
-  color: #4b5563;
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 13px;
   font-weight: 500;
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -webkit-touch-callout: none;
+  padding: 8px 16px;
+  border-radius: 24px;
 }
 
+/* --- Share Section --- */
 .share-section {
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 2px solid #f3f4f6;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 32px;
+  margin-top: 40px;
 }
-
 .share-title {
-  font-size: 1rem;
+  font-size: 18px;
   font-weight: 600;
-  color: #1f2937;
-  margin-bottom: 1rem;
+  color: #0f172a;
+  margin: 0 0 20px 0;
 }
-
 .share-buttons {
   display: flex;
+  gap: 16px;
   flex-wrap: wrap;
-  gap: 1rem;
 }
-
 .share-btn {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0.6rem 1.2rem;
-  border: none;
-  border-radius: 50px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  color: white;
-  text-decoration: none;
-  user-select: auto;
-  -webkit-user-select: auto;
-  -moz-user-select: auto;
-  -ms-user-select: auto;
-  -webkit-touch-callout: default;
-  touch-action: manipulation;
-}
-
-.share-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-}
-
-.share-btn:active {
-  transform: scale(0.95);
-}
-
-.share-icon {
-  display: flex;
-  align-items: center;
   justify-content: center;
+  gap: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #334155;
+  transition: background 0.2s;
+  flex: 1;
+  min-width: 120px;
 }
+.share-btn:hover { background: #e2e8f0; }
+.share-btn.whatsapp:hover { background: #dcfce7; border-color: #86efac; color: #166534; }
+.share-btn.facebook:hover { background: #dbeafe; border-color: #93c5fd; color: #1e40af; }
+.share-btn.instagram:hover { background: #fce7f3; border-color: #f9a8d4; color: #9d174d; }
 
-.share-icon svg {
-  width: 22px;
-  height: 22px;
-}
-
-.share-label {
-  font-size: 0.85rem;
-}
-
-.share-btn.whatsapp {
-  background: #25D366;
-}
-
-.share-btn.whatsapp:hover {
-  background: #1da851;
-}
-
-.share-btn.facebook {
-  background: #1877F2;
-}
-
-.share-btn.facebook:hover {
-  background: #0d65d9;
-}
-
-.share-btn.instagram {
-  background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
-}
-
-.share-btn.instagram:hover {
-  opacity: 0.9;
-  transform: translateY(-3px) scale(1.02);
-}
-
-/* ==============================================================
-   ✅ HEADER AD - Above Back to Home (Full Width, Natural Height)
-   ============================================================== */
-
-.header-ad-wrapper {
-  width: 100%;
-  margin: 0 0 16px 0;
-  padding: 0;
-}
-
-.ad-header-top {
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-.ad-header-top .ad-label {
-  font-size: 0.58rem;
-  color: #94a3b8;
+/* --- Loader & Error States --- */
+.loader {
   text-align: center;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  padding: 60px 20px;
+  font-size: 18px;
+  color: #64748b;
+}
+.news-view-container.error {
+  text-align: center;
+  padding: 60px 20px;
+  color: #ef4444;
+  font-size: 18px;
 }
 
-.ad-header-top .in-content-ad-link {
-  border-radius: 0 !important;
-  border: none !important;
-  border-bottom: 1px solid #e2e8f0 !important;
-  background: #ffffff !important;
-}
+/* ────────────────────────────────────────────────────────── */
+/*  MOBILE RESPONSIVENESS (Tablets & Phones)                  */
+/* ────────────────────────────────────────────────────────── */
 
-.ad-header-top .in-content-ad-image {
-  width: 100% !important;
-  height: auto !important;
-  display: block !important;
-  object-fit: contain !important;
-  max-height: none !important;
-  min-height: auto !important;
-}
-
-/* ==============================================================
-   ✅ DESKTOP - Ad Sizing
-   ============================================================== */
-@media (min-width: 769px) {
-  /* Inline ads - centered, smaller */
-  .ad-inline {
-    max-width: 70%;
-    margin-left: auto;
-    margin-right: auto;
-    padding: 12px 0;
-  }
-
-  .ad-inline .in-content-ad-image {
-    max-height: 250px !important;
-    min-height: 100px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 auto;
-  }
-
-  /* Regular content ads */
-  .in-content-ad {
-    max-width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .in-content-ad-image {
-    max-height: 400px !important;
-    min-height: 150px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 auto;
-  }
-
-  /* Header ad */
-  .header-ad-wrapper {
-    max-width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .ad-header-top .in-content-ad-image {
-    max-height: 400px !important;
-    min-height: 150px !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    margin: 0 auto;
-  }
-
-  /* Footer ad - largest */
-  .ad-content-end .in-content-ad-image {
-    max-height: 450px !important;
-    min-height: 180px !important;
-  }
-
-  /* Ads between paragraphs */
-  .ad-between-paragraphs .in-content-ad-image {
-    max-height: 300px !important;
-    min-height: 120px !important;
-  }
-}
-
-/* ==============================================================
-   ✅ TABLET - Responsive (768px and below)
-   ============================================================== */
 @media (max-width: 768px) {
   .news-view-container {
-    padding: 1.5rem 0.75rem;
+    padding: 16px 16px 40px;
   }
-
-  .news-article {
-    padding: 0 1.25rem 1.5rem;
-    border-radius: 14px;
-  }
-
-  .article-image-wrapper {
-    margin: 0 -1.25rem;
-    min-height: 180px;
-  }
-
-  .article-image {
-    max-height: 380px;
+  
+  .header-ad-wrapper {
+    margin: 0 -16px 16px -16px;
   }
 
   .article-title {
-    font-size: 1.75rem;
+    font-size: 28px;
   }
 
   .article-subtitle {
-    font-size: 1.1rem;
+    font-size: 18px;
+    margin-bottom: 24px;
   }
 
   .article-content {
-    font-size: 1.05rem;
-    line-height: 1.75;
+    font-size: 17px;
+    line-height: 1.7;
   }
 
-  .in-content-ad {
-    margin: 16px 0;
-    padding: 6px 0;
-  }
-
-  .in-content-ad .ad-label {
-    font-size: 0.5rem;
-  }
-
-  .in-content-ad-image {
-    max-height: 300px !important;
-    min-height: 100px !important;
-    object-fit: contain !important;
-  }
-
-  /* Inline ads on tablet */
-  .ad-inline {
-    max-width: 85%;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .ad-inline .in-content-ad-image {
-    max-height: 200px !important;
-    min-height: 80px !important;
-  }
-
-  .ad-between-paragraphs {
-    margin: 12px 0 18px;
-  }
-
+  .article-content p, 
+  .article-html-block p,
   .article-paragraph {
-    font-size: 0.95rem;
-    line-height: 1.7;
-  }
-
-  .share-buttons {
-    gap: 0.75rem;
-  }
-
-  .share-btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.85rem;
-  }
-
-  .share-icon svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  .ad-header-top .in-content-ad-image {
-    max-height: 300px !important;
-    min-height: 100px !important;
-    object-fit: contain !important;
-  }
-
-  /* Heading and list adjustments */
-  .article-heading {
-    margin: 1.25rem 0 0.5rem;
-  }
-
-  h1.article-heading {
-    font-size: 1.6rem;
-  }
-
-  h2.article-heading {
-    font-size: 1.3rem;
-  }
-
-  h3.article-heading {
-    font-size: 1.15rem;
-  }
-
-  .article-list-wrapper {
-    margin: 0.5rem 0 1rem;
-  }
-
-  .article-list {
-    padding-left: 1.25rem;
-    line-height: 1.7;
-  }
-
-  /* ✅ Header Ad - Tablet */
-  .header-ad-wrapper {
-    margin: 0 0 12px 0;
-  }
-
-  .ad-header-top .in-content-ad-link {
-    border-radius: 0 !important;
-    border: none !important;
-    border-bottom: 1px solid #e2e8f0 !important;
-  }
-
-  .ad-header-top .in-content-ad-image {
-    max-height: 300px !important;
-    min-height: 80px !important;
-    object-fit: contain !important;
-    width: 100% !important;
+    margin: 0 0 20px 0;
   }
 }
 
-/* ==============================================================
-   ✅ MOBILE - Responsive (640px and below)
-   ============================================================== */
-@media (max-width: 640px) {
-  .news-view-container {
-    padding: 1rem 0.5rem;
-  }
-
-  .news-article {
-    padding: 0 1rem 1.25rem;
-    border-radius: 12px;
-  }
-
-  .article-image-wrapper {
-    margin: 0 -1rem;
-    min-height: 150px;
-  }
-
-  .article-image {
-    max-height: 300px;
-  }
-
-  .image-overlay {
-    padding: 1.5rem 1rem 0.75rem;
-  }
-
-  .category-badge {
-    font-size: 0.65rem;
-    padding: 0.2rem 0.6rem;
-  }
-
+@media (max-width: 480px) {
   .article-title {
-    font-size: 1.35rem;
-    margin: 0.25rem 0 0.15rem;
-  }
-
-  .article-subtitle {
-    font-size: 0.95rem;
-    margin-bottom: 0.75rem;
+    font-size: 24px;
+    letter-spacing: -0.3px;
   }
 
   .article-content {
-    font-size: 0.95rem;
-    line-height: 1.7;
-    margin: 1rem 0;
+    font-size: 16px;
   }
 
-  /* ✅ ALL ADS - Mobile (full width, natural height) */
-  .in-content-ad {
-    margin: 12px 0;
-    padding: 4px 0;
-    width: 100%;
-  }
-
-  .in-content-ad .ad-label {
-    font-size: 0.45rem;
-    margin-bottom: 6px;
-  }
-
-  .in-content-ad-link {
-    border-radius: 8px !important;
-  }
-
-  .in-content-ad-image {
-    width: 100% !important;
-    height: auto !important;
-    max-height: 200px !important;
-    min-height: 60px !important;
-    object-fit: contain !important;
-  }
-
-  /* Inline ads on mobile - full width */
-  .ad-inline {
-    max-width: 100%;
-    margin: 10px 0;
-  }
-
-  .ad-inline .in-content-ad-image {
-    max-height: 150px !important;
-    min-height: 50px !important;
-  }
-
-  .article-paragraph {
-    font-size: 0.9rem;
-    line-height: 1.6;
-  }
-
-  .article-meta {
-    gap: 0.75rem;
-    font-size: 0.75rem;
-    padding: 0.75rem 0 0.25rem;
-  }
-
-  .meta-item svg {
-    width: 14px;
-    height: 14px;
-  }
-
-  .article-tags {
-    margin: 1rem 0;
-  }
-
-  .tag {
-    font-size: 0.7rem;
-    padding: 0.15rem 0.6rem;
-  }
-
-  .share-section {
-    margin-top: 1.5rem;
-    padding-top: 1rem;
-  }
-
-  .share-title {
-    font-size: 0.9rem;
-    margin-bottom: 0.75rem;
-  }
-
+  /* Make share buttons full-width and stack nicely on small phones */
   .share-buttons {
     flex-direction: column;
-    width: 100%;
-    gap: 0.6rem;
+    gap: 12px;
   }
-
+  
   .share-btn {
-    justify-content: center;
-    padding: 0.7rem 1.2rem;
     width: 100%;
-    font-size: 0.85rem;
+    padding: 14px 20px;
   }
 
-  .share-icon svg {
-    width: 20px;
-    height: 20px;
+  /* Adjust tags */
+  .tag {
+    font-size: 12px;
+    padding: 6px 12px;
   }
 
-  .share-label {
-    font-size: 0.8rem;
-  }
-
-  /* ✅ Header Ad - Mobile */
-  .header-ad-wrapper {
-    margin: 0 0 10px 0;
-    padding: 0;
-  }
-
-  .ad-header-top .in-content-ad-link {
-    border-radius: 0 !important;
-    border: none !important;
-    border-bottom: 1px solid #e2e8f0 !important;
-  }
-
-  .ad-header-top .in-content-ad-image {
-    width: 100% !important;
-    height: auto !important;
-    max-height: 200px !important;
-    min-height: 60px !important;
-    object-fit: contain !important;
-  }
-
-  .ad-header-top .ad-label {
-    font-size: 0.45rem;
-    margin-bottom: 4px;
-  }
-
-  /* ✅ Footer Ad - Mobile */
-  .ad-content-end {
-    margin: 24px 0 12px;
-  }
-
-  .ad-content-end .in-content-ad-image {
-    max-height: 200px !important;
-    min-height: 60px !important;
-  }
-
-  /* ✅ Between Paragraphs Ads - Mobile */
-  .ad-between-paragraphs {
-    margin: 10px 0 16px;
-  }
-
-  .ad-between-paragraphs .in-content-ad-image {
-    max-height: 180px !important;
-    min-height: 50px !important;
-  }
-
-  /* Heading and list adjustments */
-  .article-heading {
-    margin: 1rem 0 0.5rem;
-  }
-
-  h1.article-heading {
-    font-size: 1.3rem;
-  }
-
-  h2.article-heading {
-    font-size: 1.15rem;
-  }
-
-  h3.article-heading {
-    font-size: 1.05rem;
-  }
-
-  h4.article-heading {
-    font-size: 1rem;
-  }
-
-  .article-list-wrapper {
-    margin: 0.5rem 0 0.75rem;
-  }
-
-  .article-list {
-    padding-left: 1.25rem;
-    line-height: 1.6;
-    font-size: 0.95rem;
-  }
-
-  .article-list li {
-    margin-bottom: 0.15rem;
-  }
-}
-
-/* ==============================================================
-   ✅ SMALL MOBILE - Responsive (380px and below)
-   ============================================================== */
-@media (max-width: 380px) {
-  .news-view-container {
-    padding: 0.5rem 0.25rem;
-  }
-
-  .news-article {
-    padding: 0 0.75rem 1rem;
+  /* Reduce ad margins */
+  .in-content-ad {
+    margin: 30px 0;
   }
 
   .article-image-wrapper {
-    margin: 0 -0.75rem;
-    min-height: 120px;
+    margin-bottom: 16px;
+    border-radius: 4px;
   }
-
-  .article-image {
-    max-height: 220px;
-  }
-
-  .article-title {
-    font-size: 1.15rem;
-  }
-
-  .article-content {
-    font-size: 0.88rem;
-    line-height: 1.6;
-  }
-
-  .article-paragraph {
-    font-size: 0.85rem;
-    line-height: 1.5;
-  }
-
-  .in-content-ad {
-    margin: 8px 0;
-    padding: 2px 0;
-  }
-
-  .in-content-ad-image {
-    width: 100% !important;
-    height: auto !important;
-    max-height: 150px !important;
-    min-height: 40px !important;
-    object-fit: contain !important;
-  }
-
-  .ad-inline .in-content-ad-image {
-    max-height: 120px !important;
-    min-height: 30px !important;
-  }
-
-  .in-content-ad .ad-label {
-    font-size: 0.4rem;
-  }
-
-  .share-btn {
-    font-size: 0.8rem;
-    padding: 0.6rem 1rem;
-  }
-
-  .share-icon svg {
-    width: 18px;
-    height: 18px;
-  }
-
-  .share-label {
-    font-size: 0.75rem;
-  }
-
-  /* ✅ Header Ad - Small Mobile */
-  .ad-header-top .in-content-ad-image {
-    width: 100% !important;
-    height: auto !important;
-    max-height: 150px !important;
-    min-height: 40px !important;
-    object-fit: contain !important;
-  }
-
-  /* ✅ Footer Ad - Small Mobile */
-  .ad-content-end .in-content-ad-image {
-    max-height: 150px !important;
-    min-height: 40px !important;
-  }
-
-  /* ✅ Between Paragraphs - Small Mobile */
-  .ad-between-paragraphs .in-content-ad-image {
-    max-height: 130px !important;
-    min-height: 30px !important;
-  }
-
-  /* Heading and list adjustments */
-  .article-heading {
-    margin: 0.75rem 0 0.4rem;
-  }
-
-  h1.article-heading {
-    font-size: 1.1rem;
-  }
-
-  h2.article-heading {
-    font-size: 1rem;
-  }
-
-  h3.article-heading {
-    font-size: 0.95rem;
-  }
-
-  .article-list {
-    padding-left: 1rem;
-    font-size: 0.85rem;
-    line-height: 1.5;
-  }
-}
-
-/* ===== PREVENT SCREENSHOT ON MOBILE ===== */
-@media (max-width: 768px) {
-  .article-image-wrapper,
-  .article-image,
-  .protected-text,
-  .article-content,
-  .article-paragraph,
-  .in-content-ad,
-  .article-list-wrapper,
-  .article-list,
-  .article-heading {
-    -webkit-touch-callout: none !important;
-    -webkit-user-select: none !important;
-    user-select: none !important;
-    touch-action: none !important;
-  }
-}
-
-/* ===== PRINT OVERRIDES ===== */
-@media print {
-  .image-protection-layer {
-    display: none !important;
-  }
-
-  .article-image {
-    pointer-events: none !important;
-    -webkit-user-select: auto !important;
-    user-select: auto !important;
-  }
-
-  .protected-text,
-  .protected-text *,
-  .article-paragraph,
-  .article-content *,
-  .article-list-wrapper,
-  .article-list,
-  .article-heading {
-    -webkit-user-select: auto !important;
-    user-select: auto !important;
-  }
-
-  .news-view-container,
-  .news-article,
-  .article-title,
-  .article-subtitle,
-  .article-content * {
-    -webkit-user-select: auto !important;
-    user-select: auto !important;
-  }
-
-  .in-content-ad {
-    display: none !important;
-  }
-}
-
-/* ===== ACCESSIBILITY ===== */
-@media speech {
-  .protected-text,
-  .protected-text *,
-  .article-paragraph,
-  .article-list-wrapper,
-  .article-list,
-  .article-heading {
-    user-select: auto !important;
-    -webkit-user-select: auto !important;
-  }
-}
-
-/* ===== PROTECTION OVERRIDES ===== */
-.share-btn,
-.back-link,
-.share-btn *,
-.back-link * {
-  user-select: auto !important;
-  -webkit-user-select: auto !important;
-  -moz-user-select: auto !important;
-  -ms-user-select: auto !important;
-  -webkit-touch-callout: default !important;
-  touch-action: manipulation !important;
 }

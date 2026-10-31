@@ -251,12 +251,17 @@ const HomePage = () => {
       setLoading(pageNumber === 0);
       const data = await getAllNews(pageNumber, 20); 
       
-      // ✅ PAGINATION FIX: Read from data.content
       const isPaginated = data && data.content !== undefined;
       const newItems = isPaginated ? data.content : data;
       const publishedNews = newItems.filter(item => item.status === 'published' || !item.status);
 
-      setNewsData(prev => pageNumber === 0 ? publishedNews : [...prev, ...publishedNews]);
+      setNewsData(prev => {
+        // ✅ FIX: Prevent duplicate keys by merging and filtering unique IDs
+        const combined = pageNumber === 0 ? publishedNews : [...prev, ...publishedNews];
+        const uniqueData = Array.from(new Map(combined.map(item => [item.id, item])).values());
+        return uniqueData;
+      });
+      
       setHasMore(isPaginated ? !data.last : false); 
     } catch (err) {
       console.error('Error fetching news:', err);
@@ -283,7 +288,11 @@ const HomePage = () => {
           <NewsGrid newsData={newsData} />
           {hasMore && (
             <div style={{ textAlign: 'center', padding: '20px', width: '100%' }}>
-              <button onClick={() => { const next = page + 1; setPage(next); loadPage(next); }} disabled={loading} style={{ padding: '10px 24px', background: '#6C63FF', color: 'white', border: 'none', borderRadius: '6px', cursor: loading ? 'not-allowed' : 'pointer' }}>
+              <button 
+                onClick={() => { const next = page + 1; setPage(next); loadPage(next); }} 
+                disabled={loading} 
+                style={{ padding: '10px 24px', background: '#6C63FF', color: 'white', border: 'none', borderRadius: '6px', cursor: loading ? 'not-allowed' : 'pointer' }}
+              >
                 {loading ? 'Loading...' : 'Load More News'}
               </button>
             </div>
